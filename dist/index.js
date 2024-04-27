@@ -19,30 +19,21 @@ app.listen(PORT, () => {
     throw new Error(error.message);
 });
 
-// Twilio WhatsApp Business API sends custom message upon running
-// node dist/index
-//--------------------------------------------------------
-const accountSid = "AC25d72b09a5d2848d119c99ba66a8ba1f";
-const authToken = "a583d68657ac085e53bdf31ba87fc174";
-const client = require('twilio')(accountSid, authToken);
-
-client.messages
-      .create({
-         from: 'whatsapp:+14155238886',
-         body: 'Hello, there!',
-         to: 'whatsapp:+6586009948'
-       })
-      .then(message => console.log(message.sid));
-
 
 // Using Webhook as a listener for notifications to enable real time 
 // communication between different applications or services
 //----------------------------------------------------------
-const express = require("express");
+//const express = require("express");
 const body_parser = require("body-parser");
+const { callInitSendSMS } = require("./WhatsApp");
+const { MobileInstance } = require("twilio/lib/rest/api/v2010/account/availablePhoneNumberCountry/mobile");
 
 //const app = express().use(body_parser.json());
-
+app.use(body_parser.json()); // Add body parser middleware
 app.listen(8000, () => {
     console.log("webhook is listening");
 });
+
+// Importing the CallInitSendSMS function and call:
+//----------------------------------------------------------
+callInitSendSMS("Hello there!", "+6586009948");
