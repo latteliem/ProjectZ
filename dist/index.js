@@ -33,3 +33,16 @@ client.messages
          to: 'whatsapp:+6586009948'
        })
       .then(message => console.log(message.sid));
+
+
+// Using Webhook as a listener for notifications to enable real time 
+// communication between different applications or services
+//----------------------------------------------------------
+const express = require("express");
+const body_parser = require("body-parser");
+
+//const app = express().use(body_parser.json());
+
+app.listen(8000, () => {
+    console.log("webhook is listening");
+});
