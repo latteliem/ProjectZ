@@ -1,0 +1,6 @@
+To do:
+- Hot reload typescript express server / find typescript express boilerplate (minimum)
+- Figure out how to call Twillo Whatsapp API/npm library (to send a hello world to your phone number)
+- Figure out how to respond to whatsapp message using Twillo library (webhook, to send a reply after u send "hi" to the bot)
+- Figure out how to call OpenAi using nodejs
+- Figure out how to integrate business analytics graphs, to recommend users on what products to invest on, using AI algorithms (GAN models)
