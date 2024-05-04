@@ -20,21 +20,66 @@ app.get('/reply', (req, res) => {
 });
 
 app.post('/reply', express.json(), (req,res) => {
-    return new Promise((resolve, reject) => {
-        console.log(req.body.Body);
-        var messageToSend = "";
-        if(req.body.Body == "inquire") {
-            messageToSend = "Hello there, how i can assist you?";
-            const button = document.getElementById('myButton');
-            button.addEventListener('click', function() {
-            // Code to execute when button is clicked
-        });
-        }
-        else {
-            messageToSend = "Hello" + req.body.Body + "How are you! Let me know how i can assist you.";
-        }
+    console.log(req.body.Body);
+    var messageToSend = "";
+    if(req.body.Body === "1" || req.body.Body === "inquire"){
+        messageToSend = "View our products:\n"+
+        "1. Cat food \n2. Dog food\n 3. Hamster food";
+        
+    //     const button = document.getElementById('myButton');
+    //     button.addEventListener('click', function() {
+    //     // Code to execute when button is clicked
+    // });
+    }
+    else {
+        messageToSend = "Hello" + req.body.Body + "How are you! Let me know how i can assist you.";
+    }
 
-        client.messages
+    // client.messages
+    //         .create({
+    //             body:messageToSend,
+    //             from:"whatsapp:+14155238886",
+    //             to: "whatsapp:+6586009948"
+    //         })
+    //         .then((message) => {
+    //             console.log(message.sid);
+    //             resolve(message.sid);
+    //         });
+    sendMessage(messageToSend);
+        });
+
+    //res.send('send via callback');
+
+// app.post('/callback', (req, res) => {
+//     res.send("hello world!");
+// });
+
+app.listen(port, () => {
+    console.log(`Server is running on port ${port}`);
+    const initialMessage = {
+        body: "Hi! We are LumiChat, and we allow businesses to go digital in less than 30 minutes. We are an open e-commerce market for Small and Medium Enterprises. "+
+        "Press: \n1. to inquire about our products \n2. shop from our catalog.\nHave fun!",
+        from: "whatsapp:+14155238886",
+        to: "whatsapp:+6586009948",
+        // buttons: [
+        //     { content_type: "text", title: "Inquire about products", payload: "inquire" },
+        //     { content_type: "text", title: "Shop", payload: "shop" }
+        // ]
+    };
+    sendMessage("Hi! We are LumiChat, and we allow businesses to go digital in less than 30 minutes. We are an open e-commerce market for Small and Medium Enterprises. "+
+    "Press: \n1. to inquire about our products \n2. shop from our catalog.\nHave fun!");
+    // client.messages
+    //     .create(initialMessage)
+    //     .then((message) => {
+    //         console.log(message.sid);
+    //     })
+    //     .catch((error) => {
+    //         console.error("Error sending initial message:", error);
+    //     });
+  });
+
+function sendMessage(messageToSend){
+    client.messages
                 .create({
                     body:messageToSend,
                     from:"whatsapp:+14155238886",
@@ -42,37 +87,6 @@ app.post('/reply', express.json(), (req,res) => {
                 })
                 .then((message) => {
                     console.log(message.sid);
-                    resolve(message.sid);
+                    //resolve(message.sid);
                 });
-            });
-
-        res.send('send via callback');
-    });
-
-app.post('/callback', (req, res) => {
-    res.send("hello world!");
-});
-
-app.listen(port, () => {
-    console.log(`Server is running on port ${port}`);
-    const initialMessage = {
-        body: "Hi! How can I assist you?",
-        from: "whatsapp:+14155238886",
-        to: "whatsapp:+6586009948",
-        buttons: [
-            { content_type: "text", title: "Inquire about products", payload: "inquire" },
-            { content_type: "text", title: "Shop", payload: "shop" }
-        ]
-    };
-
-    client.messages
-        .create(initialMessage)
-        .then((message) => {
-            console.log(message.sid);
-        })
-        .catch((error) => {
-            console.error("Error sending initial message:", error);
-        });
-  });
-
-  
+}
