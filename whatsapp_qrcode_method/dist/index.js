@@ -19,34 +19,78 @@ app.get('/reply', (req, res) => {
     res.send("Hello world! from reply");
 });
 
-app.post('/reply', express.json(), (req,res) => {
+// Define a variable to store the conversation state
+//let conversationState = {};
+
+app.post('/reply', express.json(), (req, res) => {
     console.log(req.body.Body);
-    var messageToSend = "";
-    if(req.body.Body === "1" || req.body.Body === "inquire"){
-        messageToSend = "View our products:\n"+
-        "1. Cat food \n2. Dog food\n 3. Hamster food";
-        
-    //     const button = document.getElementById('myButton');
-    //     button.addEventListener('click', function() {
-    //     // Code to execute when button is clicked
-    // });
-    }
-    else {
-        messageToSend = "Hello" + req.body.Body + "How are you! Let me know how i can assist you.";
+    const userMessage = req.body.Body.toLowerCase();
+    let messageToSend = "";
+
+    if (!conversationState[req.body.From]) {
+        // Initialize conversation state for the user
+        conversationState[req.body.From] = {
+            state: "initial"
+        };
     }
 
-    // client.messages
-    //         .create({
-    //             body:messageToSend,
-    //             from:"whatsapp:+14155238886",
-    //             to: "whatsapp:+6586009948"
-    //         })
-    //         .then((message) => {
-    //             console.log(message.sid);
-    //             resolve(message.sid);
-    //         });
-    sendMessage(messageToSend);
-        });
+    const currentState = conversationState[req.body.From].state;
+
+    switch (currentState) {
+        case "initial":
+            if (userMessage === "1" || userMessage === "inquire") {
+                // Send product list
+                messageToSend = "View our products:\n"+
+                                "1. Cat food \n2. Dog food\n3. Hamster food";
+                conversationState[req.body.From].state = "productList";
+            } else {
+                messageToSend = "I'm sorry, I didn't understand that. Please select one of the options.";
+            }
+            sendMessage(messageToSend);
+            break;
+            
+        case "productList":
+            products = ["cat food", "dog food", "hamster food"];
+            const selectedProductIndex = Number(userMessage) - 1;
+            if (selectedProductIndex >= 0 && selectedProductIndex < products.length) {
+                // Prompt for purchase
+                messageToSend = `Proceed to purchase ${products[selectedProductIndex]}? (Yes/no)`;
+                conversationState[req.body.From].state = "purchaseConfirmation";
+                conversationState[req.body.From].selectedProduct = products[selectedProductIndex];
+            } else {
+                messageToSend = "Invalid selection. Please select a product from the list.";
+            }
+            sendMessage(messageToSend);
+            break;
+
+        case "purchaseConfirmation":
+            if (userMessage === "yes") {
+                // Payment received
+                messageToSend = "Payment received!";
+            } else if (userMessage === "no") {
+                // User declined purchase
+                messageToSend = "Feel free to browse our other products!";
+            } else {
+                // Invalid response
+                messageToSend = "Please respond with 'yes' or 'no'.";
+            }
+            sendMessage(messageToSend);
+            // Reset conversation state and clear user input
+            delete conversationState[req.body.From];
+            req.body.Body = "";
+            break;
+
+        default:
+            // Invalid state, reset conversation
+            messageToSend = "Oops! Something went wrong. Let's start over.";
+            sendMessage(messageToSend);
+            delete conversationState[req.body.From];
+            break;
+    }
+
+    res.send('send via callback');
+});
+
 
     //res.send('send via callback');
 
@@ -78,6 +122,8 @@ app.listen(port, () => {
     //     });
   });
 
+
+const conversationState = {};
 function sendMessage(messageToSend){
     client.messages
                 .create({
