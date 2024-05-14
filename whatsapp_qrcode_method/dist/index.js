@@ -6,7 +6,7 @@ app.use(express.urlencoded({ extended: false }));
 const port = 3000;
 
 const accountSid = "AC25d72b09a5d2848d119c99ba66a8ba1f";
-const authToken = "a583d68657ac085e53bdf31ba87fc174";
+const authToken = "eda3cf451675000b149befec2e6d922f";
 	
 const client = require('twilio')(accountSid, authToken);
 
@@ -26,7 +26,7 @@ app.post('/reply', express.json(), (req, res) => {
     console.log(req.body.Body);
     const userMessage = req.body.Body.toLowerCase();
     let messageToSend = "";
-
+    console.log("JHi");
     if (!conversationState[req.body.From]) {
         // Initialize conversation state for the user
         conversationState[req.body.From] = {
@@ -35,7 +35,8 @@ app.post('/reply', express.json(), (req, res) => {
     }
 
     const currentState = conversationState[req.body.From].state;
-
+    console.log(curentState);
+    console.log(userMessage)
     switch (currentState) {
         case "initial":
             if (userMessage === "1" || userMessage === "inquire") {
@@ -102,7 +103,7 @@ app.listen(port, () => {
     console.log(`Server is running on port ${port}`);
     const initialMessage = {
         body: "Hi! We are LumiChat, and we allow businesses to go digital in less than 30 minutes. We are an open e-commerce market for Small and Medium Enterprises. "+
-        "Press: \n1. to inquire about our products \n2. shop from our catalog.\nHave fun!",
+        "Press: \n*1* to inquire about our products \n*2*. shop from our catalog.\nHave fun!",
         from: "whatsapp:+14155238886",
         to: "whatsapp:+6586009948",
         // buttons: [
