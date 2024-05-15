@@ -1,3 +1,6 @@
+// export function myClass(){
+//console.log('hello, this is the classes i have for this project');
+
 class Business{
     constructor(ID, Name, Email, Description){
         this.busId = ID;
@@ -6,9 +9,7 @@ class Business{
         this.busDesc = Description;
     }
 }
-
-module.exports = Business;
-
+    
 class User {
     constructor(userID, userName, userPassword) {
         this.userid = userID;
@@ -90,4 +91,6 @@ class Product{
     }
 }
 
+module.exports = Business, User, Product;
 
+// export { Business, User, Product };
