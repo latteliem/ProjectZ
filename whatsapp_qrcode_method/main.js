@@ -1,9 +1,9 @@
 class Business{
-    constructor(busID, busName, busEmail, busDesc){
-        this.busid = busID;
-        this.busname = busName;
-        this.busemail = busEmail;
-        this.busdesc = busDesc;
+    constructor(ID, Name, Email, Description){
+        this.busId = ID;
+        this.busName = Name;
+        this.busEmail = Email;
+        this.busDesc = Description;
     }
 }
 
