@@ -4,8 +4,11 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
-const accountSid = 'AC25d72b09a5d2848d119c99ba66a8ba1f';
-const authToken = 'eda3cf451675000b149befec2e6d922f';
+const accountSid = 'AC25d72b09a5d2848d119c99ba66a8ba1f';  // Your Twilio Account SID
+const authToken = 'eda3cf451675000b149befec2e6d922f';  // Your Twilio Auth Token
+const twilioPhoneNumber = 'whatsapp:+14155238886';  // Your Twilio WhatsApp number
+const userPhoneNumber = 'whatsapp:+6586009948';  // Your WhatsApp number
+
 const client = require('twilio')(accountSid, authToken);
 
 const port = 3000;
@@ -20,16 +23,14 @@ app.get('/', (req, res) => {
     res.send('Hello world!');
 });
 
-
-// send message end point
-//--------------------------------
 app.post('/send-message', (req, res) => {
     const requestBody = JSON.stringify(req.body);
+    console.log("Received a request to /send-message:", req.body);
 
     const options = {
         hostname: localhost,
         port: port,
-        path: '/reply',
+        path: '/webhook',
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -55,6 +56,7 @@ app.post('/send-message', (req, res) => {
     });
 
     request.on('error', error => {
+        console.error("Error in /send-message request:", error);
         res.status(500).json({ message: 'Error sending message', error: error.message });
     });
 
@@ -62,30 +64,28 @@ app.post('/send-message', (req, res) => {
     request.end();
 });
 
-// reply endpoint - we are using Postman to 
-// "Poke" the server to see if it works
-// then, we move on to troubleshooting
-// the bot's end, and user's end
-app.post('/reply', (req, res) => {
-    console.log('Received a POST request:', req.body);
+// Change '/reply' to '/webhook'
+app.post('/webhook', (req, res) => {
+    console.log('Received a POST request to /webhook:', req.body);
     const userMessage = req.body.Body ? req.body.Body.toLowerCase() : "";
+    const from = req.body.From;
     let messageToSend = '';
 
-    if (!conversationState[req.body.From]) {
-        conversationState[req.body.From] = { state: 'initial' };
+    if (!conversationState[from]) {
+        conversationState[from] = { state: 'initial' };
     }
 
-    const currentState = conversationState[req.body.From].state;
+    const currentState = conversationState[from].state;
 
     switch (currentState) {
         case 'initial':
             if (userMessage === '1' || userMessage === 'inquire') {
                 messageToSend = 'View our products:\n**1.** Cat food \n**2.** Dog food\n**3.** Hamster food';
-                conversationState[req.body.From].state = 'productList';
+                conversationState[from].state = 'productList';
             } else {
                 messageToSend = "I'm sorry, I didn't understand that. Please select one of the options.";
             }
-            sendMessage(req.body.From, messageToSend);
+            sendMessage(from, messageToSend);
             break;
 
         case 'productList':
@@ -93,12 +93,12 @@ app.post('/reply', (req, res) => {
             const selectedProductIndex = Number(userMessage) - 1;
             if (selectedProductIndex >= 0 && selectedProductIndex < products.length) {
                 messageToSend = `Proceed to purchase ${products[selectedProductIndex]}? (Yes/no)`;
-                conversationState[req.body.From].state = 'purchaseConfirmation';
-                conversationState[req.body.From].selectedProduct = products[selectedProductIndex];
+                conversationState[from].state = 'purchaseConfirmation';
+                conversationState[from].selectedProduct = products[selectedProductIndex];
             } else {
                 messageToSend = 'Invalid selection. Please select a product from the list.';
             }
-            sendMessage(req.body.From, messageToSend);
+            sendMessage(from, messageToSend);
             break;
 
         case 'purchaseConfirmation':
@@ -109,14 +109,14 @@ app.post('/reply', (req, res) => {
             } else {
                 messageToSend = "Please respond with 'yes' or 'no'.";
             }
-            sendMessage(req.body.From, messageToSend);
-            delete conversationState[req.body.From];
+            sendMessage(from, messageToSend);
+            delete conversationState[from];
             break;
 
         default:
             messageToSend = "Oops! Something went wrong. Let's start over.";
-            sendMessage(req.body.From, messageToSend);
-            delete conversationState[req.body.From];
+            sendMessage(from, messageToSend);
+            delete conversationState[from];
             break;
     }
 
@@ -127,7 +127,7 @@ function sendMessage(to, message) {
     client.messages
         .create({
             body: message,
-            from: 'whatsapp:+14155238886',
+            from: twilioPhoneNumber,
             to: to,
         })
         .then((message) => {
@@ -138,7 +138,13 @@ function sendMessage(to, message) {
         });
 }
 
+// Function to send initial "press 1" message
+function sendInitialMessage() {
+    const initialMessage = "Hi! We are LumiChat. Press 1 to inquire about our products.";
+    sendMessage(userPhoneNumber, initialMessage);
+}
+
 app.listen(port, () => {
     console.log(`Server is running on port ${port}`);
-    sendMessage('whatsapp:+6586009948', 'Hi! We are LumiChat. Press 1 to inquire about our products.');
+    sendInitialMessage();
 });
