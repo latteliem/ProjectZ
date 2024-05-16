@@ -22,7 +22,7 @@ webApp.get('/', (req, res) => {
 });
 
 //const WA = require('../helper-function/whatsapp-send-message');
-
+const WA = require('../helper-function/whatsapp-send-message');
 // Route for WhatsApp
 webApp.post('/whatsapp', async (req, res) => {
     console.log(req.body);
@@ -33,6 +33,7 @@ webApp.post('/whatsapp', async (req, res) => {
     console.log(senderID);
 
     // writing a funciton to send message back to WhatsApp
+    await WA.sendMessage('Hello from the other side', senderID)
 });
 
 // Start the server
