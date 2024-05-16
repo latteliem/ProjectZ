@@ -30,7 +30,9 @@ webApp.post('/whatsapp', async (req, res) => {
     let senderID = req.body.From;
 
     console.log(message);
-    console.log(senderID)
+    console.log(senderID);
+
+    // writing a funciton to send message back to WhatsApp
 });
 
 // Start the server
