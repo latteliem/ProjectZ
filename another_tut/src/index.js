@@ -17,24 +17,24 @@ const PORT = process.env.PORT;
 
 // Home route
 webApp.get('/', (req, res) => {
-    res.send(`Hello World.!`);
+    res.send('Hello World.!');
 });
 
 const WA = require('../helper-function/whatsapp-send-message');
 
-// Route for WhatsApp
-webApp.post('/whatsapp', async (req, res) => {
-
+webApp.post('/whatsapp', (req, res) => {
+    console.log(req.body);
     let message = req.body.Body;
     let senderID = req.body.From;
-
+  
     console.log(message);
     console.log(senderID);
-
+  
     // Write a function to send message back to WhatsApp
-    await WA.sendMessage('Hello from the other side.', senderID);
-
-});
+    WA.sendMessage('Hello from the other side.', senderID);
+    res.status(200).send('Message processed');
+  });
+  
 
 // Start the server
 webApp.listen(PORT, () => {
