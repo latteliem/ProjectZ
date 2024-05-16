@@ -1,47 +1,50 @@
-const Business = require('./class');
-const Product = require('./class'); 
-const User = require('./class');
+const Business = require('./businessClass');
+const Product = require('./productClass'); 
+const User = require('./userClass');
 const { MongoClient } = require('mongodb');
 
-// Connection URI
-const uri = 'mongodb+srv://Jovin:Jovin2301@lumichat.9mctvbz.mongodb.net/${databaseName}?retryWrites=true&w=majority&ssl=true';
+// // Connection URI
+// const uri = 'mongodb+srv://Jovin:Jovin2301@lumichat.9mctvbz.mongodb.net/${databaseName}?retryWrites=true&w=majority&ssl=true';
 
 // Database Name
 //await createBusiness('Business1', 'business1@gmail.com', 'test demo business created');
 
-
 // Create a new MongoClient
-const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
+//const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
 
 async function configureMongo() {
+  //connection URI
+  const uri = 'mongodb+srv://Jovin:Jovin2301@lumichat.9mctvbz.mongodb.net/${dbName}?retryWrites=true&w=majority&ssl=true';
+
+  // Create a new MongoClient
+  const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
+
   try {
-        // Creation of database specific to the business
-        //await createBusiness('Business1', 'business1@gmail.com', 'test demo business created');
-        const bus = createBusiness('Business2', 'business1@gmail.com', 'test demo business created');
-        const dbName = bus.busName;
-        // Connect to the MongoDB server
-        await client.connect();
+      // Creation of database specific to the business
+      //await createBusiness('Business1', 'business1@gmail.com', 'test demo business created');
+      const bus = await createBusiness('LumiChat', 'business1@gmail.com', 'test demo business created'); 
+      const dbName = bus.busName + '_database';
+      console.log('helllo dbName',dbName);
 
-        console.log('Connected to MongoDB server');
+      // Connect to the MongoDB server
+      await client.connect();
+      console.log('Connected to MongoDB server');
 
-        // Specify the database to use
-        const db = client.db(dbName);
+      // Specify the database to use
+      const db = client.db(dbName);
+      console.log('Using database:', dbName);
 
-        console.log('Using database:', dbName);
+      const prodCollection = db.collection('productCollection'); //need to check if productName exists alr, make primary key incremental
 
-        const prodCollection = db.collection('productCollection'); //need to check if productName exists alr, make primary key incremental
+      //creating the products and adding them into the product catalogue specific to the business
+      await createProduct(prodCollection, 'Pet Food', 'Food for pet', 13.65, 10, 70, 'foodie', 'pet', 'foodforpet.img');
 
-        //creating the products and adding them into the product catalogue specific to the business
-        await createProduct(prodCollection, 'Pet Food', 'Food for pet', 13.65, 10, 70, 'foodie', 'pet', 'foodforpet.img');
-        //await insertProduct(client, dbName, prod1);
+      const userCollection = db.collection('userCollection'); //need to check if username exists alr, make primary key incremental
+      
+      //creating the user(customers) and adding them into the user database specific to the business   
+      await createUser(userCollection, 'John', 'john123','johnnnn@gmail.com');
 
-        const userCollection = db.collection('userCollection'); //need to check if username exists alr, make primary key incremental
-        
-        //creating the user(customers) and adding them into the user database specific to the business   
-        await createUser(userCollection, 'John', 'john123','johnnnn@gmail.com');
-        //await insertUser(client, dbName, user1);
-
-        console.log('Document inserted successfully');
+      console.log('Document inserted successfully');
     } catch (err) {
         console.error('Error configuring MongoDB:', err);
     } finally {
@@ -54,13 +57,18 @@ async function configureMongo() {
 const businessList = [];
 async function createBusiness(busName, busEmail, busDesc) {
   try {
-      const highestIdDoc = await busCollection.findOne({}, { sort: { _id: -1 } });
-      const highestId = highestIdDoc ? highestIdDoc._id : 0;
+      // const highestIdDoc = await busCollection.findOne({}, { sort: { _id: -1 } });
+      // const highestId = highestIdDoc ? highestIdDoc._id : 0;
+
+      const highestIdDoc = businessList.length;
+      console.log('helllllo', highestIdDoc);
 
       // Assign the next value to _id
-      uniIdentifier = highestId + 1;
+      uniIdentifier = highestIdDoc + 1;
       const bus = new Business(uniIdentifier, busName, busEmail, busDesc);
-
+      console.log('unique identifier for business1', uniIdentifier, bus.busId);
+      console.log('businesslength', businessList.length);
+      
       // Check if business name already exists
       const existingBus = await businessList.find(existingBus => existingBus.name === bus.name); 
       if (existingBus) {
@@ -72,6 +80,7 @@ async function createBusiness(busName, busEmail, busDesc) {
       businessList.push(bus);
 
       console.log('Business has been created successfully');
+      console.log(bus);
       return bus;
   } catch (err) {
       console.error('Error creating business:', err);
@@ -105,19 +114,20 @@ async function createProduct(prodCollection, prodName, prodDesc, prodSPrice, pro
       // Assign the next value to _id
       uniIdentifier = highestId + 1;
       const prod = new Product(uniIdentifier, prodName, prodDesc, prodSPrice, prodCPrice, prodQuanToSell, prodBrand, prodCategory, prodImage);
-
+      console.log('product', prod);
       console.log('Product created successfully');
       try {
         // Check if product name already exists
-        const existingProduct = await prodCollection.findOne({ productName: product.productName });
+        const existingProduct = await prodCollection.findOne({ productName: prod.productName });
         if (existingProduct) {
-            console.log('Product name already exists:', product.productName);
+            console.log('Product name already exists:', prod.productName);
             return;
         }
 
       // Insert the product
-      await prodCollection.insertOne(product);
+      await prodCollection.insertOne(prod);
       console.log('Product inserted successfully');
+      console.log(prod);
       } catch (err) {
         console.error('Error inserting product:', err);
     }
@@ -167,7 +177,7 @@ async function createUser(userCollection, userName, userPassword, userEmail) {
         // Insert the user
         await userCollection.insertOne(user);
         console.log('User inserted successfully');
-
+        console.log(user);
       } catch (err) {
           console.error('Error inserting user:', err);
       }

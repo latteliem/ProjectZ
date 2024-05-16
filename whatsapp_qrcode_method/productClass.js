@@ -1,43 +1,3 @@
-// export function myClass(){
-//console.log('hello, this is the classes i have for this project');
-
-class Business{
-    constructor(ID, Name, Email, Description){
-        this.busId = ID;
-        this.busName = Name;
-        this.busEmail = Email;
-        this.busDesc = Description;
-    }
-}
-    
-class User {
-    constructor(userID, userName, userPassword) {
-        this.userid = userID;
-        this.username = userName;
-        this.userpassword = userPassword;
-        this.shoppingCart = [];
-    };
-
-    addToCart(prodID, prodName, prodSellPrice, prodQuantity){
-        const productInCart = { //creating a function to add the product and the quantity of product that the user would like to purchase
-            prodid: prodID,
-            prodname: prodName,
-            prodsellprice: prodSellPrice,
-            prodQuantity: prodQuantity
-        };
-        this.shoppingCart.push(productInCart);    //adds the product that the user wants to buy to the empty shopping cart array    
-    }
-
-    paymentCheck(paymentID, paymentStatus){
-        this.paymentid = paymentID;
-        this.paymentstatus = paymentStatus;
-    }
-
-    viewCart(){
-        return this.shoppingCart;
-    }
-}
-
 class Product{
     constructor(productID, productName, productDesc, productSellPrice, productCostPrice, productQuanToSell, productBrand, productCategory, productImage){
         this.prodid = productID;
@@ -91,6 +51,6 @@ class Product{
     }
 }
 
-module.exports = Business, User, Product;
+module.exports = Product;
 
 // export { Business, User, Product };
