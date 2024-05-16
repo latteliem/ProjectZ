@@ -20,3 +20,6 @@ const sendMessage = async(message, senderID) => {
     }
 };
 
+module.exports = {
+    sendMessage 
+}
