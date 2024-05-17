@@ -59,7 +59,7 @@ webApp.post('/whatsapp', (req, res) => {
             productMessage += `*${product.id}*. ${product.name} - $${product.price}\n`;
             productMessage += `Description: ${product.description}\n\n`;
         });
-        productMessage += 'Please enter the product ID or name to add it to your cart.';
+        productMessage += 'Please enter "Add" + the ID of product i.e. Add 1, to add it to your cart.';
         WA.sendMessage(productMessage, senderID);
     } else if (message.startsWith('add') || !isNaN(parseInt(message))) {
         let productId;
