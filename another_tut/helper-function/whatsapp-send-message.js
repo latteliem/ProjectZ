@@ -1,26 +1,16 @@
-const accountSid = process.env.TWILIO_ACCOUNT_SID;
-const authToken = process.env.TWILIO_AUTH_TOKEN;
+const accountSid = 'AC25d72b09a5d2848d119c99ba66a8ba1f';
+const authToken = 'eda3cf451675000b149befec2e6d922f';
+const client = require('twilio')(accountSid, authToken);
 
-const client = require('twilio')(accountSid, authToken, {
-  lazyLoading: true,
-});
+function sendMessage(body, to) {
+    client.messages
+        .create({
+            body: body,
+            from: 'whatsapp:+14155238886',
+            to: to
+        })
+        .then(message => console.log(`Message sent: ${message.sid}`))
+        .catch(error => console.error('Error sending message:', error));
+}
 
-// Function to send message to WhatsApp
-// Function to send message to WhatsApp
-const sendMessage = async (message, senderID) => {
-    try {
-      await client.messages.create({
-        to: senderID,
-        body: message,
-        from: "whatsapp:+14155238886"
-      });
-      console.log("Message sent successfully!");
-    } catch (error) {
-      console.log(`Error at sendMessage --> ${error}`);
-    }
-  };
-  
-
-module.exports = {
-  sendMessage
-};
+module.exports = { sendMessage };
