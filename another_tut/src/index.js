@@ -174,8 +174,29 @@ function handleLoggedInActions(senderID, message) {
             // error handling in a graceful way
             WA.sendMessage('Product not found. Please enter a valid product ID or name', senderID)
         }
-        
     }
+    else if (message === 'view cart' || message === '2') {
+        const cart = carts[senderID];
+        if (cart && cart.length > 0) {
+            // we declare a cartMessage, that accumulates string of text
+            let cartMessage = 'Your Cart: \n';
+            let total = 0;
+            cart.forEach(item => {
+                cartMessage += '${item.name} - $${item.price} \n';
+                // local variable, total, to store the total amount of money
+                total += item.price;
+            });
+            cartMessage += 'Total: $${total}\n';
+            cartMessage += 'Type "add" followed by the product ID to add more items, or \
+            type "checkout" to proceed';
+            WA.sendMessage(cartMessage, senderID);
+        }
+        else {
+            WA.sendMessage('Your cart is empty.', senderID);
+        }
+    }
+        
+    
 }
 
 
