@@ -126,3 +126,25 @@ webApp.post('/whatsapp', (req, res) => {
 webApp.listen(PORT, () => {
     console.log(`Server is up and running at ${PORT}`);
 });
+
+
+async function createAccount(users, senderID){
+    if (!users[senderID].username) {
+        users[senderID].username = message;
+        WA.sendMessage('Username set! Now enter a password:', senderID);
+    } else if (!users[senderID].password) {
+        bcrypt.hash(message, 10, (err, hash) => {
+            if (err) {
+                WA.sendMessage('An error occurred. Please try again.', senderID);
+            } else {
+                users[senderID].password = hash;
+                users[senderID].state = 'loggedIn';
+                WA.sendMessage('Account created successfully! You can now view products by typing "view products".', senderID);
+            }
+        });
+    }
+}
+
+async function logInAccount(){
+
+}
