@@ -27,115 +27,22 @@ webApp.get('/', (req, res) => {
     res.send('Hello World.!');
 });
 
+// POST request from webapp
+//===================================================
 webApp.post('/whatsapp', (req, res) => {
-    console.log(req.body);
     const message = req.body.Body.toLowerCase();
     const senderID = req.body.From;
 
-    console.log(message);
-    console.log(senderID);
-
     if (!users[senderID]) {
-        users[senderID] = { state: 'createAccount' };
+        users[senderID] = { state: 'initial' };
         WA.sendMessage('Welcome to LumiChat, and we allow businesses to go digital in less than 30 minutes. We are an open e-commerce market for Small and Medium Enterprises. '
-        + '\nPlease create an account, or login. (Type "create account" or "login)', senderID);
-    } 
-    else if (users[senderID].state === 'createAccount') {
-        if (!users[senderID].username) {
-            users[senderID].username = message;
-            WA.sendMessage('Username set! Now enter a password:', senderID);
-        } 
-        else if (!users[senderID].password) {
-            bcrypt.hash(message, 10, (err, hash) => {
-                if (err) {
-                    WA.sendMessage('An error occurred. Please try again.', senderID);
-                } else {
-                    users[senderID].password = hash;
-                    users[senderID].state = 'loggedIn';
-                    WA.sendMessage('Account created successfully! You can now view products by typing "view products".', senderID);
-                }
-            });
-        }
-    } 
-    else if (message === 'view products' || message === '1') {
-        let productMessage = 'Available Products:\n';
-        products.forEach(product => {
-            productMessage += `*${product.id}*. ${product.name} - $${product.price}\n`;
-            productMessage += `Description: ${product.description}\n\n`;
-        });
-        productMessage += 'Please enter "Add" + the ID of product i.e. Add 1, to add it to your cart.';
-        WA.sendMessage(productMessage, senderID);
-    } 
-    else if (message.startsWith('add') || !isNaN(parseInt(message))) {
-        let productId;
-        if (message.startsWith('add')) {
-            productId = parseInt(message.split(' ')[1]);
-        } 
-        else {
-            productId = parseInt(message);
-        }
-        const product = products.find(p => p.id === productId);
-        if (product) {
-            if (!carts[senderID]) {
-                carts[senderID] = [];
-            }
-            carts[senderID].push(product);
-            WA.sendMessage(`${product.name} has been added to your cart. Type 'view cart' to see your cart or 'checkout' to proceed to checkout.`, senderID);
-        } 
-        else {
-            WA.sendMessage('Product not found. Please enter a valid product ID or name.', senderID);
-        }
-    } 
-    else if (message === 'view cart' || message === '2') {
-        const cart = carts[senderID];
-        if (cart && cart.length > 0) {
-            let cartMessage = 'Your Cart:\n';
-            let total = 0;
-            cart.forEach(item => {
-                cartMessage += `${item.name} - $${item.price}\n`;
-                total += item.price;
-            });
-            cartMessage += `Total: $${total}\n`;
-            cartMessage += 'Type "add" followed by the product ID to add more items or "checkout" to proceed.';
-            WA.sendMessage(cartMessage, senderID);
-        } 
-        else {
-            WA.sendMessage('Your cart is empty.', senderID);
-        }
-    } 
-    else if (message === 'checkout' || message === '3') {
-        const cart = carts[senderID];
-        if (cart && cart.length > 0) {
-            let total = 0;
-            cart.forEach(item => {
-                total += item.price;
-            });
-            WA.sendMessage(`Your total is $${total}. Do you confirm the purchase? (yes/no)`, senderID);
-            carts[senderID].state = 'confirmPurchase';
-        } 
-        else {
-            WA.sendMessage('Your cart is empty. Add items to your cart before checking out.', senderID);
-        }
-    } 
-    else if (carts[senderID] && carts[senderID].state === 'confirmPurchase') {
-        if (message === 'yes') {
-            WA.sendMessage('Thank you for your purchase! Your order is being processed.', senderID);
-            delete carts[senderID];
-        } 
-        else if (message === 'no') {
-            WA.sendMessage('Purchase canceled. You can continue to add items to your cart or proceed to checkout again.', senderID);
-            delete carts[senderID].state;
-        } 
-        else {
-            WA.sendMessage('Please respond with "yes" or "no" to confirm your purchase.', senderID);
-        }
+        + '\nPlease create an account, or login. (Type "create account" or "login")', senderID);
     } else {
-        WA.sendMessage('Welcome to our store! Here are some commands you can use:\n1. View Products\n2. View Cart\n3. Checkout\nYou can also add a product to your cart by typing "Add [Product ID]" or just the product ID.', senderID);
+        handleUserState(senderID, message);
     }
 
     res.status(200).send('Message processed');
 });
-
 
 // Main function to handle our user's states
 //============================================
