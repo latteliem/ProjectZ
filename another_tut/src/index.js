@@ -94,13 +94,9 @@ function handleLoggedInActions(senderID, message) {
         productMessage += 'Please enter "Add " and its respective ID i.e. Add 1, to add it to cart.'
         WA.sendMessage(productMessage, senderID);
     }
-    else {
-        WA.sendMessage('No products available at the moment. Please check back later or consider buying a product instead.', senderID);
-        WA.sendMessage('Would you like to browse our product catalog? Please type "view products" to see what’s available.', senderID);
-    }
 
     // portion to handle an "add" into the cart
-    if (message.startsWith('add') || !isNaN(parseInt(message))) {
+    else if (message.startsWith('add') || !isNaN(parseInt(message))) {
         let productId;
         if (message.startsWith('add')) {
             productId = parseInt(message.split(' ')[1]);
@@ -187,6 +183,17 @@ function handleLoggedInActions(senderID, message) {
         if (message === 'yes') {
             WA.sendMessage('Thank you for your purchase! Your order is now being processed.')
         }
+    }
+
+    //This handles user's empty products??
+    else {
+        //WA.sendMessage('No products available at the moment. Please check back later or consider buying a product instead.', senderID);
+        WA.sendMessage('Would you like to browse our product catalog? Please type "view products" to see what’s available.', senderID);
+        WA.sendMessage('Welcome to our store! Here are some commands you can use:\
+        \n*1.* View Products\
+        \n*2.* View Cart\
+        \n*3.* Checkout\
+        \nYou can also add a product to your cart by typing "Add [Product ID]" \or just the product ID.', senderID);
     }
     
 }

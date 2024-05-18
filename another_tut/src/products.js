@@ -4,8 +4,6 @@ const products = [
     { id: 3, name: 'Hamster Food', price: 8, description: 'Healthy hamster food for your small pet.' }
 ];
 
-module.exports = products;
-
 function getAllProducts() {
     if (products.length === 0) {
         return 'No products available at the moment. Please check back later.';
@@ -19,3 +17,10 @@ function getAllProducts() {
     productMessage += 'Please enter "Add" and its respective ID i.e. Add 1, to add it to cart.';
     return productMessage;
 }
+
+// module export two different components - the products temp DB itself,
+// and the getAllProducts() function.
+module.exports = {
+    products,
+    getAllProducts
+};
