@@ -195,6 +195,26 @@ function handleLoggedInActions(senderID, message) {
             WA.sendMessage('Your cart is empty.', senderID);
         }
     }
+
+    // view cart functionality
+    else if (message === 'view cart' || message === 2) {
+        const cart = carts[senderID];
+        if (cart && cart.length > 0) {
+            let cartMessage = "Your Cart: \n";
+            let total = 0;
+            cart.forEach(item => {
+                cartMessage += '${item.name} - $${item.price}\n';
+                total += item.price;
+            });
+            cartMessage += 'Total: $${total}\n';
+            cartMessage += 'Type "add" followed by the product ID to add more items, or\
+            "checkout" to proceed.'
+            WA.sendMessage(cartMessage, senderID);
+        }
+        else {
+            WA.sendMessage('Your cart is empty', senderID);
+        }
+    }
         
     
 }
