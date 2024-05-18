@@ -229,6 +229,9 @@ function handleLoggedInActions(senderID, message) {
             // we then set the state of the user to "confirm purchase"
             users[senderID].state = 'confirmPurchase';
         }
+        else {
+            WA.sendMessage('Your cart is empty. Add items to your cart before checking out');
+        }
     }
     
 }
