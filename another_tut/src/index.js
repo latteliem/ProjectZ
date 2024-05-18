@@ -249,6 +249,18 @@ function verifyLogin(senderID) {
     }
 }
 
+// handling the viewing of products
+function handleViewProducts(senderID) {
+    let productMessage = 'Available Products:\n';
+    products.forEach(product => {
+        productMessage += `*${product.id}*. ${product.name} - $${product.price}\n`;
+        productMessage += `Description: ${product.description}\n\n`;
+    });
+    productMessage += 'Please enter "Add" + the ID of product i.e. Add 1, to add it to your cart.';
+    WA.sendMessage(productMessage, senderID);
+}
+
+
 function handleAddProduct(senderID, message) {
     let productId;
     if (message.startsWith('add')) {
