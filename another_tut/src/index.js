@@ -353,6 +353,19 @@ function handleCheckout(senderID) {
     }
 }
 
+function handleConfirmPurchase(senderID, message) {
+    if (message === 'yes') {
+        WA.sendMessage('Thank you for your purchase! Your order is being processed.', senderID);
+        delete carts[senderID];
+        users[senderID].state = 'loggedIn';
+    } else if (message === 'no') {
+        WA.sendMessage('Purchase canceled. You can continue to add items to your cart or proceed to checkout again.', senderID);
+        users[senderID].state = 'loggedIn';
+    } else {
+        WA.sendMessage('Please respond with "yes" or "no" to confirm your purchase.', senderID);
+    }
+}
+
 // Start the server
 //================================================
 webApp.listen(PORT, () => {
