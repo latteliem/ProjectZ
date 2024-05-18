@@ -9,7 +9,7 @@ const products = require('./products');
 const carts = require('./cart');
 const WA = require('../helper-function/whatsapp-send-message');
 
-// Data structure to store user credentials (for demonstration purposes only; consider using a database in production)
+// temporarily using a users list
 const users = {};
 
 // Start the webapp
@@ -37,7 +37,8 @@ webApp.post('/whatsapp', (req, res) => {
 
     if (!users[senderID]) {
         users[senderID] = { state: 'createAccount' };
-        WA.sendMessage('Welcome! Please create an account. Enter a username:', senderID);
+        WA.sendMessage('Welcome to LumiChat, and we allow businesses to go digital in less than 30 minutes. We are an open e-commerce market for Small and Medium Enterprises. '
+        + '\nPlease create an account, or login. (Type "create account" or "login)', senderID);
     } else if (users[senderID].state === 'createAccount') {
         if (!users[senderID].username) {
             users[senderID].username = message;
@@ -121,6 +122,27 @@ webApp.post('/whatsapp', (req, res) => {
 
     res.status(200).send('Message processed');
 });
+
+
+// function to handle the creation of account process
+//============================================================
+function handleCreateAccount(senderID, message) {
+    if (!users[senderID].username) {
+        users[senderID].username = message;
+        WA.sendMessage('Username set! Now enter a password:', senderID);
+    } else if (!users[senderID].password) {
+        bcrypt.hash(message, 10, (err, hash) => {
+            if (err) {
+                WA.sendMessage('An error occurred. Please try again.', senderID);
+            } else {
+                users[senderID].password = hash;
+                users[senderID].state = 'loggedIn';
+                WA.sendMessage('Account created successfully! You can now view products by typing "view products".', senderID);
+            }
+        });
+    }
+}
+
 
 // Start the server
 webApp.listen(PORT, () => {
