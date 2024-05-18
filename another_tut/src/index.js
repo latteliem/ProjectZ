@@ -339,6 +339,19 @@ function handleViewCart(senderID) {
     }
 }
 
+function handleCheckout(senderID) {
+    const cart = carts[senderID];
+    if (cart && cart.length > 0) {
+        let total = 0;
+        cart.forEach(item => {
+            total += item.price;
+        });
+        WA.sendMessage(`Your total is $${total}. Do you confirm the purchase? (yes/no)`, senderID);
+        users[senderID].state = 'confirmPurchase';
+    } else {
+        WA.sendMessage('Your cart is empty. Add items to your cart before checking out.', senderID);
+    }
+}
 
 // Start the server
 //================================================
