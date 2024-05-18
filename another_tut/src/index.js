@@ -155,7 +155,33 @@ function handleLogin(senderID, message) {
     }
 }
 
+// function to verify log in - needed by handleLogin
+//===================================================
+function verifyLogin(senderID) {
+    const { loginUsername, loginPassword } = users[senderID];
+    const user = Object.values(users).find(user => user.username === loginUsername);
+
+    if (user) {
+        // bcrypt would compare the password encrypted, to the user's password that is queried
+        bcrypt.compare(loginPassword, user.password, (err, result) => {
+            if (result) {
+                users[senderID].state = 'loggedIn';
+                WA.sendMessage('Login successful! You can now view products by typing "view products".', senderID);
+            } else {
+                WA.sendMessage('Incorrect password. Please try again.', senderID);
+                users[senderID].state = 'login';
+            }
+        });
+    } else {
+        WA.sendMessage('Username not found. Please try again.', senderID);
+        users[senderID].state = 'login';
+    }
+}
+
+
+
 // Start the server
+//================================================
 webApp.listen(PORT, () => {
     console.log(`Server is up and running at ${PORT}`);
 });
