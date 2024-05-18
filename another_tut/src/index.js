@@ -39,11 +39,13 @@ webApp.post('/whatsapp', (req, res) => {
         users[senderID] = { state: 'createAccount' };
         WA.sendMessage('Welcome to LumiChat, and we allow businesses to go digital in less than 30 minutes. We are an open e-commerce market for Small and Medium Enterprises. '
         + '\nPlease create an account, or login. (Type "create account" or "login)', senderID);
-    } else if (users[senderID].state === 'createAccount') {
+    } 
+    else if (users[senderID].state === 'createAccount') {
         if (!users[senderID].username) {
             users[senderID].username = message;
             WA.sendMessage('Username set! Now enter a password:', senderID);
-        } else if (!users[senderID].password) {
+        } 
+        else if (!users[senderID].password) {
             bcrypt.hash(message, 10, (err, hash) => {
                 if (err) {
                     WA.sendMessage('An error occurred. Please try again.', senderID);
@@ -54,7 +56,8 @@ webApp.post('/whatsapp', (req, res) => {
                 }
             });
         }
-    } else if (message === 'view products' || message === '1') {
+    } 
+    else if (message === 'view products' || message === '1') {
         let productMessage = 'Available Products:\n';
         products.forEach(product => {
             productMessage += `*${product.id}*. ${product.name} - $${product.price}\n`;
@@ -62,11 +65,13 @@ webApp.post('/whatsapp', (req, res) => {
         });
         productMessage += 'Please enter "Add" + the ID of product i.e. Add 1, to add it to your cart.';
         WA.sendMessage(productMessage, senderID);
-    } else if (message.startsWith('add') || !isNaN(parseInt(message))) {
+    } 
+    else if (message.startsWith('add') || !isNaN(parseInt(message))) {
         let productId;
         if (message.startsWith('add')) {
             productId = parseInt(message.split(' ')[1]);
-        } else {
+        } 
+        else {
             productId = parseInt(message);
         }
         const product = products.find(p => p.id === productId);
@@ -76,10 +81,12 @@ webApp.post('/whatsapp', (req, res) => {
             }
             carts[senderID].push(product);
             WA.sendMessage(`${product.name} has been added to your cart. Type 'view cart' to see your cart or 'checkout' to proceed to checkout.`, senderID);
-        } else {
+        } 
+        else {
             WA.sendMessage('Product not found. Please enter a valid product ID or name.', senderID);
         }
-    } else if (message === 'view cart' || message === '2') {
+    } 
+    else if (message === 'view cart' || message === '2') {
         const cart = carts[senderID];
         if (cart && cart.length > 0) {
             let cartMessage = 'Your Cart:\n';
@@ -91,10 +98,12 @@ webApp.post('/whatsapp', (req, res) => {
             cartMessage += `Total: $${total}\n`;
             cartMessage += 'Type "add" followed by the product ID to add more items or "checkout" to proceed.';
             WA.sendMessage(cartMessage, senderID);
-        } else {
+        } 
+        else {
             WA.sendMessage('Your cart is empty.', senderID);
         }
-    } else if (message === 'checkout' || message === '3') {
+    } 
+    else if (message === 'checkout' || message === '3') {
         const cart = carts[senderID];
         if (cart && cart.length > 0) {
             let total = 0;
@@ -103,17 +112,21 @@ webApp.post('/whatsapp', (req, res) => {
             });
             WA.sendMessage(`Your total is $${total}. Do you confirm the purchase? (yes/no)`, senderID);
             carts[senderID].state = 'confirmPurchase';
-        } else {
+        } 
+        else {
             WA.sendMessage('Your cart is empty. Add items to your cart before checking out.', senderID);
         }
-    } else if (carts[senderID] && carts[senderID].state === 'confirmPurchase') {
+    } 
+    else if (carts[senderID] && carts[senderID].state === 'confirmPurchase') {
         if (message === 'yes') {
             WA.sendMessage('Thank you for your purchase! Your order is being processed.', senderID);
             delete carts[senderID];
-        } else if (message === 'no') {
+        } 
+        else if (message === 'no') {
             WA.sendMessage('Purchase canceled. You can continue to add items to your cart or proceed to checkout again.', senderID);
             delete carts[senderID].state;
-        } else {
+        } 
+        else {
             WA.sendMessage('Please respond with "yes" or "no" to confirm your purchase.', senderID);
         }
     } else {
@@ -123,6 +136,49 @@ webApp.post('/whatsapp', (req, res) => {
     res.status(200).send('Message processed');
 });
 
+// function to handle logged in functions 
+//=========================================================
+function handleLoggedInActions(senderID, message) {
+    if (message.toLowerCase === 'view products' || message === '1') {
+        let productMessage = 'Available Products:\n';
+        products.forEach(product => {
+            productMessage += '*${product.id}*. ${product.name} - $${product.price}\n';
+            productMessage += 'Description: ${product.description}\n\n';
+        });
+        productMessage += 'Please enter "Add " and its respective ID i.e. Add 1, to add it to cart.'
+        WA.sendMessage(productMessage, senderID);
+    }
+
+    // portion to handle an "add" into the cart
+    else if (message.startsWith('add') || !isNaN(parseInt(message))) {
+        let productId;
+        if (message.startsWith('add')) {
+            productId = parseInt(message.split(' ')[1]);
+        }
+        else {
+            productId = parseInt(message);
+        }
+        const product = products.find(p => p.id === productId) // to be replaced with Jovin's SQL querying
+        if (product) {
+            if (!carts[senderID]) {
+                carts[senderID] = [];
+            }
+            //within this if statement, we could push the product into cart. to be replaced with
+            // jovins associating product to cart
+            carts[senderID].push(product);
+            WA.sendMessage('${product.name} has been added to your cart. \
+            \nType "view cart" to see your cart, or \
+            \n "checkout" to proceed with your checkout.');
+        }
+        else {
+            // error handling in a graceful way
+            WA.sendMessage('Product not found. Please enter a valid product ID or name', senderID)
+        }
+        
+    }
+}
+
+
 
 // function to handle the creation of account process
 //============================================================
@@ -130,11 +186,14 @@ function handleCreateAccount(senderID, message) {
     if (!users[senderID].username) {
         users[senderID].username = message;
         WA.sendMessage('Username set! Now enter a password:', senderID);
-    } else if (!users[senderID].password) {
+    } 
+
+    else if (!users[senderID].password) {
         bcrypt.hash(message, 10, (err, hash) => {
             if (err) {
                 WA.sendMessage('An error occurred. Please try again.', senderID);
-            } else {
+            } 
+            else {
                 users[senderID].password = hash;
                 users[senderID].state = 'loggedIn';
                 WA.sendMessage('Account created successfully! You can now view products by typing "view products".', senderID);
@@ -149,7 +208,8 @@ function handleLogin(senderID, message) {
     if (!users[senderID].loginUsername) {
         users[senderID].loginUsername = message;
         WA.sendMessage('Username received! Now enter your password:', senderID);
-    } else if (!users[senderID].loginPassword) {
+    } 
+    else if (!users[senderID].loginPassword) {
         users[senderID].loginPassword = message;
         verifyLogin(senderID);
     }
@@ -167,12 +227,14 @@ function verifyLogin(senderID) {
             if (result) {
                 users[senderID].state = 'loggedIn';
                 WA.sendMessage('Login successful! You can now view products by typing "view products".', senderID);
-            } else {
+            } 
+            else {
                 WA.sendMessage('Incorrect password. Please try again.', senderID);
                 users[senderID].state = 'login';
             }
         });
-    } else {
+    } 
+    else {
         WA.sendMessage('Username not found. Please try again.', senderID);
         users[senderID].state = 'login';
     }
