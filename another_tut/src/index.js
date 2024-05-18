@@ -215,7 +215,21 @@ function handleLoggedInActions(senderID, message) {
             WA.sendMessage('Your cart is empty', senderID);
         }
     }
-        
+    
+    else if (message === "checkout" || message === '3') {
+        const cart = carts[senderID];
+        if (cart && cart.length > 0){
+            let total = 0;
+            cart.forEach(item => {
+                total += item.price;
+            });
+
+            // to be replaced with buttons of whatsapp templates
+            WA.sendMessage('Your total is $$ {total}. Do you want to confirm the purchase? (yes/no)')
+            // we then set the state of the user to "confirm purchase"
+            users[senderID].state = 'confirmPurchase';
+        }
+    }
     
 }
 
