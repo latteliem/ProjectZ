@@ -161,6 +161,19 @@ function handleUserState(senderID, message) {
     }
 }
 
+// handle initial process of creating a LumiChat account
+//============================================================
+function handleInitial(senderID, message) {
+    if (message === 'create account') {
+        users[senderID].state = 'createAccount';
+        WA.sendMessage('Please enter a username:', senderID);
+    } else if (message === 'login') {
+        users[senderID].state = 'login';
+        WA.sendMessage('Please enter your username:', senderID);
+    } else {
+        WA.sendMessage('Invalid option. Please type "create account" or "login".', senderID);
+    }
+}
 
 // function to handle logged in functions 
 //=========================================================
