@@ -1,13 +1,23 @@
-// External packages
 const express = require('express');
 const bodyParser = require('body-parser');
 const bcrypt = require('bcrypt');
 require('dotenv').config();
+const twilio = require('twilio');
 
 // Import data structures
 const { products, getAllProducts } = require('./products');
 const carts = require('./cart');
 const WA = require('../helper-function/whatsapp-send-message');
+
+// Twilio setup
+const accountSid = process.env.TWILIO_ACCOUNT_SID;
+const authToken = process.env.TWILIO_AUTH_TOKEN;
+const client = new twilio(accountSid, authToken);
+
+// Twilio phone numbers
+const twilioPhoneNumber = process.env.TWILIO_PHONE_NUMBER;
+const userPhoneNumber = process.env.USER_PHONE_NUMBER;  // Add the user's phone number
+
 
 // Temporarily using a users list
 const users = {};
@@ -230,4 +240,11 @@ function handleConfirmPurchase(senderID, message) {
 // Start the server
 webApp.listen(PORT, () => {
     console.log(`Server is up and running at ${PORT}`);
+        // Send the welcome message when the server starts
+    client.messages.create({
+        body: 'Welcome to LumiChat! We allow businesses to go digital in less than 30 minutes. We are an open e-commerce market for Small and Medium Enterprises. Please create an account, log in, or view products. (Type "create account", "login", or "view products")',
+        from: `whatsapp:+14155238886`,
+        to: `whatsapp:+6586009948`
+    }).then(message => console.log(`Message sent with SID: ${message.sid}`))
+      .catch(error => console.error(`Error sending message: ${error}`));
 });
