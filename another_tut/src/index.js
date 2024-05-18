@@ -233,6 +233,11 @@ function handleLoggedInActions(senderID, message) {
             WA.sendMessage('Your cart is empty. Add items to your cart before checking out');
         }
     }
+    else if (users[senderID].state === 'confirmPurchase') {
+        if (message === 'yes') {
+            WA.sendMessage('Thank you for your purchase! Your order is now being processed.')
+        }
+    }
     
 }
 
