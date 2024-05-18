@@ -303,6 +303,24 @@ function verifyLogin(senderID) {
     }
 }
 
+function handleAddProduct(senderID, message) {
+    let productId;
+    if (message.startsWith('add')) {
+        productId = parseInt(message.split(' ')[1]);
+    } else {
+        productId = parseInt(message);
+    }
+    const product = products.find(p => p.id === productId);
+    if (product) {
+        if (!carts[senderID]) {
+            carts[senderID] = [];
+        }
+        carts[senderID].push(product);
+        WA.sendMessage(`${product.name} has been added to your cart. Type 'view cart' to see your cart or 'checkout' to proceed to checkout.`, senderID);
+    } else {
+        WA.sendMessage('Product not found. Please enter a valid product ID or name.', senderID);
+    }
+}
 
 
 // Start the server
@@ -310,3 +328,4 @@ function verifyLogin(senderID) {
 webApp.listen(PORT, () => {
     console.log(`Server is up and running at ${PORT}`);
 });
+
