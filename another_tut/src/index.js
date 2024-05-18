@@ -5,7 +5,7 @@ const bcrypt = require('bcrypt');
 require('dotenv').config();
 
 // Import data structures
-const { getAllProducts } = require('./products');
+const { products, getAllProducts } = require('./products');
 const carts = require('./cart');
 const WA = require('../helper-function/whatsapp-send-message');
 
@@ -35,7 +35,8 @@ webApp.post('/whatsapp', (req, res) => {
         users[senderID] = { state: 'initial' };
         WA.sendMessage('Welcome to LumiChat, and we allow businesses to go digital in less than 30 minutes. We are an open e-commerce market for Small and Medium Enterprises. '
         + '\nPlease create an account, or login. (Type "create account" or "login")', senderID);
-    } else {
+    } 
+    else {
         handleUserState(senderID, message);
     }
 
@@ -68,10 +69,12 @@ function handleInitial(senderID, message) {
     if (message === 'create account') {
         users[senderID].state = 'createAccount';
         WA.sendMessage('Please enter a username:', senderID);
-    } else if (message === 'login') {
+    } 
+    else if (message === 'login') {
         users[senderID].state = 'login';
         WA.sendMessage('Please enter your username:', senderID);
-    } else {
+    } 
+    else {
         WA.sendMessage('Invalid option. Please type "create account" or "login".', senderID);
     }
 }
@@ -80,7 +83,8 @@ function handleCreateAccount(senderID, message) {
     if (!users[senderID].username) {
         users[senderID].username = message;
         WA.sendMessage('Username set! Now enter a password:', senderID);
-    } else if (!users[senderID].password) {
+    } 
+    else if (!users[senderID].password) {
         bcrypt.hash(message, 10, (err, hash) => {
             if (err) {
                 WA.sendMessage('An error occurred. Please try again.', senderID);
@@ -97,7 +101,8 @@ function handleLogin(senderID, message) {
     if (!users[senderID].loginUsername) {
         users[senderID].loginUsername = message;
         WA.sendMessage('Username received! Now enter your password:', senderID);
-    } else if (!users[senderID].loginPassword) {
+    } 
+    else if (!users[senderID].loginPassword) {
         users[senderID].loginPassword = message;
         verifyLogin(senderID);
     }
@@ -117,7 +122,8 @@ function verifyLogin(senderID) {
                 users[senderID].state = 'login';
             }
         });
-    } else {
+    } 
+    else {
         WA.sendMessage('Username not found. Please try again.', senderID);
         users[senderID].state = 'login';
     }
@@ -127,13 +133,17 @@ function handleLoggedInActions(senderID, message) {
     if (message.toLowerCase() === 'view products' || message === '1') {
         const productMessage = getAllProducts();  // Calls the getAllProducts function
         WA.sendMessage(productMessage, senderID);
-    } else if (message.startsWith('add') || !isNaN(parseInt(message))) {
+    } 
+    else if (message.startsWith('add') || !isNaN(parseInt(message))) {
         handleAddProduct(senderID, message);
-    } else if (message === 'view cart' || message === '2') {
+    } 
+    else if (message === 'view cart' || message === '2') {
         handleViewCart(senderID);
-    } else if (message === 'checkout' || message === '3') {
+    } 
+    else if (message === 'checkout' || message === '3') {
         handleCheckout(senderID);
-    } else {
+    } 
+    else {
         WA.sendMessage('Welcome to our store! Here are some commands you can use:\n1. View Products\n2. View Cart\n3. Checkout\nYou can also add a product to your cart by typing "Add [Product ID]" or just the product ID.', senderID);
     }
 }
@@ -142,17 +152,19 @@ function handleAddProduct(senderID, message) {
     let productId;
     if (message.startsWith('add')) {
         productId = parseInt(message.split(' ')[1]);
-    } else {
+    } 
+    else {
         productId = parseInt(message);
     }
-    const product = products.find(p => p.id === productId);
+    const product = products.find(p => p.id === productId);  // Ensure products is defined
     if (product) {
         if (!carts[senderID]) {
             carts[senderID] = [];
         }
         carts[senderID].push(product);
         WA.sendMessage(`${product.name} has been added to your cart. Type 'view cart' to see your cart or 'checkout' to proceed to checkout.`, senderID);
-    } else {
+    } 
+    else {
         WA.sendMessage('Product not found. Please enter a valid product ID or name.', senderID);
     }
 }
@@ -169,7 +181,8 @@ function handleViewCart(senderID) {
         cartMessage += `Total: $${total}\n`;
         cartMessage += 'Type "add" followed by the product ID to add more items or "checkout" to proceed.';
         WA.sendMessage(cartMessage, senderID);
-    } else {
+    } 
+    else {
         WA.sendMessage('Your cart is empty.', senderID);
     }
 }
@@ -183,7 +196,8 @@ function handleCheckout(senderID) {
         });
         WA.sendMessage(`Your total is $${total}. Do you confirm the purchase? (yes/no)`, senderID);
         users[senderID].state = 'confirmPurchase';
-    } else {
+    } 
+    else {
         WA.sendMessage('Your cart is empty. Add items to your cart before checking out.', senderID);
     }
 }
@@ -193,10 +207,12 @@ function handleConfirmPurchase(senderID, message) {
         WA.sendMessage('Thank you for your purchase! Your order is being processed.', senderID);
         delete carts[senderID];
         users[senderID].state = 'loggedIn';
-    } else if (message === 'no') {
+    } 
+    else if (message === 'no') {
         WA.sendMessage('Purchase canceled. You can continue to add items to your cart or proceed to checkout again.', senderID);
         users[senderID].state = 'loggedIn';
-    } else {
+    } 
+    else {
         WA.sendMessage('Please respond with "yes" or "no" to confirm your purchase.', senderID);
     }
 }
