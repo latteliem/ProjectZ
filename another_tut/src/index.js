@@ -143,6 +143,17 @@ function handleCreateAccount(senderID, message) {
     }
 }
 
+// function to handle the login of account
+//============================================================
+function handleLogin(senderID, message) {
+    if (!users[senderID].loginUsername) {
+        users[senderID].loginUsername = message;
+        WA.sendMessage('Username received! Now enter your password:', senderID);
+    } else if (!users[senderID].loginPassword) {
+        users[senderID].loginPassword = message;
+        verifyLogin(senderID);
+    }
+}
 
 // Start the server
 webApp.listen(PORT, () => {
