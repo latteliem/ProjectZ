@@ -5,3 +5,17 @@ const products = [
 ];
 
 module.exports = products;
+
+function getAllProducts() {
+    if (products.length === 0) {
+        return 'No products available at the moment. Please check back later.';
+    }
+    
+    let productMessage = 'Available Products:\n';
+    products.forEach(product => {
+        productMessage += `*${product.id}*. ${product.name} - $${product.price}\n`;
+        productMessage += `Description: ${product.description}\n\n`;
+    });
+    productMessage += 'Please enter "Add" and its respective ID i.e. Add 1, to add it to cart.';
+    return productMessage;
+}

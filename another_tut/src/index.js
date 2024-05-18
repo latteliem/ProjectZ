@@ -96,6 +96,7 @@ function handleLoggedInActions(senderID, message) {
     }
     else {
         WA.sendMessage('No products available at the moment. Please check back later or consider buying a product instead.', senderID);
+        WA.sendMessage('Would you like to browse our product catalog? Please type "view products" to see what’s available.', senderID);
     }
 
     // portion to handle an "add" into the cart
@@ -252,7 +253,13 @@ function verifyLogin(senderID) {
     }
 }
 
+// handling the displaying of products
+//=========================================
+
+
+
 // handling the viewing of products
+//===========================================
 function handleViewProducts(senderID) {
     let productMessage = 'Available Products:\n';
     products.forEach(product => {
