@@ -136,6 +136,32 @@ webApp.post('/whatsapp', (req, res) => {
     res.status(200).send('Message processed');
 });
 
+
+// Main function to handle our user's states
+//============================================
+function handleUserState(senderID, message) {
+    switch (users[senderID].state) {
+        case 'initial':
+            handleInitial(senderID, message);
+            break;
+        case 'createAccount':
+            handleCreateAccount(senderID, message);
+            break;
+        case 'login':
+            handleLogin(senderID, message);
+            break;
+        case 'loggedIn':
+            handleLoggedInActions(senderID, message);
+            break;
+        case 'confirmPurchase':
+            handleConfirmPurchase(senderID, message);
+            break;
+        default:
+            WA.sendMessage('Invalid state. Please try again.', senderID);
+    }
+}
+
+
 // function to handle logged in functions 
 //=========================================================
 function handleLoggedInActions(senderID, message) {
