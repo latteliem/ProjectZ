@@ -94,9 +94,12 @@ function handleLoggedInActions(senderID, message) {
         productMessage += 'Please enter "Add " and its respective ID i.e. Add 1, to add it to cart.'
         WA.sendMessage(productMessage, senderID);
     }
+    else {
+        WA.sendMessage('No products available at the moment. Please check back later or consider buying a product instead.', senderID);
+    }
 
     // portion to handle an "add" into the cart
-    else if (message.startsWith('add') || !isNaN(parseInt(message))) {
+    if (message.startsWith('add') || !isNaN(parseInt(message))) {
         let productId;
         if (message.startsWith('add')) {
             productId = parseInt(message.split(' ')[1]);
