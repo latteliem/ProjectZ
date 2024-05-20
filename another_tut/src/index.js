@@ -42,13 +42,11 @@ webApp.get('/', (req, res) => {
     res.send('Hello World!');
 });
 
+// POST request from webapp
+//===================================================
 webApp.post('/whatsapp', (req, res) => {
-    console.log(req.body);
     const message = req.body.Body.toLowerCase();
     const senderID = req.body.From;
-
-    console.log(message);
-    console.log(senderID);
 
     if (!users[senderID]) {
         users[senderID] = { state: 'initial' };
@@ -177,6 +175,7 @@ webApp.post('/whatsapp', (req, res) => {
 });
 
 // Start the server
+//================================================
 webApp.listen(PORT, () => {
     console.log(`Server is up and running at ${PORT}`);
 });
