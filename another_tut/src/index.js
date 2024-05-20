@@ -1,3 +1,4 @@
+// External packages
 const express = require('express');
 const bodyParser = require('body-parser');
 const bcrypt = require('bcrypt');
@@ -16,8 +17,7 @@ const client = new twilio(accountSid, authToken);
 
 // Twilio phone numbers
 const twilioPhoneNumber = process.env.TWILIO_PHONE_NUMBER;
-const userPhoneNumber = process.env.USER_PHONE_NUMBER;  // Add the user's phone number
-
+const userPhoneNumber = process.env.USER_PHONE_NUMBER;
 
 // Temporarily using a users list
 const users = {};
@@ -37,22 +37,28 @@ webApp.get('/', (req, res) => {
     res.send('Hello World.!');
 });
 
-webApp.post('/whatsapp', (req, res) => {
-    const message = req.body.Body.toLowerCase();
+webApp.post('/whatsapp', async (req, res) => {
+    const message = req.body.Body.toLowerCase().trim();
     const senderID = req.body.From;
+    console.log(`Received message: ${message} from ${senderID}`);
 
     if (!users[senderID]) {
+        // Send onboarding message
         users[senderID] = { state: 'initial' };
-        WA.sendMessage('Welcome to LumiChat! We allow businesses to go digital in less than 30 minutes. We are an open e-commerce market for Small and Medium Enterprises. '
-        + '\nPlease create an account, log in, or view products. (Type "create account", "login", or "view products")', senderID);
-    } else {
-        handleUserState(senderID, message);
+        await WA.sendMessage(
+            'Welcome to LumiChat! We allow businesses to go digital in less than 30 minutes. We are an open e-commerce market for Small and Medium Enterprises. '
+            + '\nPlease create an account, log in, or view products. (Type "create account", "login", or "view products")', 
+            senderID
+        );
     }
+
+    handleUserState(senderID, message);
 
     res.status(200).send('Message processed');
 });
 
 function handleUserState(senderID, message) {
+    console.log(`Handling state for user: ${senderID}, current state: ${users[senderID].state}`);
     switch (users[senderID].state) {
         case 'initial':
             handleInitial(senderID, message);
@@ -64,7 +70,7 @@ function handleUserState(senderID, message) {
             handleLogin(senderID, message);
             break;
         case 'viewProducts':
-            handleViewProducts(senderID, message);
+            handleViewProducts(senderID);
             break;
         case 'loggedIn':
             handleLoggedInActions(senderID, message);
@@ -86,8 +92,7 @@ function handleInitial(senderID, message) {
         WA.sendMessage('Please enter your username:', senderID);
     } else if (message === 'view products') {
         users[senderID].state = 'viewProducts';
-        const productMessage = getAllProducts();
-        WA.sendMessage(productMessage, senderID);
+        handleViewProducts(senderID);
     } else {
         WA.sendMessage('Invalid option. Please type "create account", "login", or "view products".', senderID);
     }
@@ -104,7 +109,8 @@ function handleCreateAccount(senderID, message) {
             } else {
                 users[senderID].password = hash;
                 users[senderID].state = 'loggedIn';
-                WA.sendMessage('Account created successfully! You can now view products by typing "view products".', senderID);
+                WA.sendMessage('Account created successfully!', senderID);
+                handleLoggedInActions(senderID, ''); // Trigger logged in actions after account creation
             }
         });
     }
@@ -128,7 +134,8 @@ function verifyLogin(senderID) {
         bcrypt.compare(loginPassword, user.password, (err, result) => {
             if (result) {
                 users[senderID].state = 'loggedIn';
-                WA.sendMessage('Login successful! You can now view products by typing "view products".', senderID);
+                WA.sendMessage('Login successful!', senderID);
+                handleLoggedInActions(senderID, ''); // Trigger logged in actions after login
             } else {
                 WA.sendMessage('Incorrect password. Please try again.', senderID);
                 users[senderID].state = 'login';
@@ -140,30 +147,39 @@ function verifyLogin(senderID) {
     }
 }
 
-function handleViewProducts(senderID, message) {
-    if (message.startsWith('add') || !isNaN(parseInt(message))) {
-        handleAddProduct(senderID, message);
-    } else {
-        WA.sendMessage('Invalid option. Please type "Add [Product ID]" to add a product to your cart.', senderID);
-    }
+function handleViewProducts(senderID) {
+    const productMessage = getAllProducts();
+    WA.sendMessage(productMessage, senderID);
+    users[senderID].state = 'loggedIn'; // Reset state to loggedIn after viewing products
 }
 
 function handleLoggedInActions(senderID, message) {
+    console.log(`Handling loggedIn actions for user: ${senderID}`);
     if (message.startsWith('add') || !isNaN(parseInt(message))) {
         handleAddProduct(senderID, message);
+    } 
+    else if (message === 'view products' || message === '1') {
+        handleViewProducts(senderID);
     } else if (message === 'view cart' || message === '2') {
         handleViewCart(senderID);
     } else if (message === 'checkout' || message === '3') {
         handleCheckout(senderID);
-    } else {
-        WA.sendMessage('Welcome to our store! Here are some commands you can use:\n1. View Products\n2. View Cart\n3. Checkout\nYou can also add a product to your cart by typing "Add [Product ID]" or just the product ID.', senderID);
+        
+    } 
+        
+    else {
+        WA.sendMessage(
+            'Welcome to our store! Here are some commands you can use:\n1. View Products\n2. View Cart\n3. Checkout\n'
+            + 'You can also add a product to your cart by typing "Add [Product ID]" or just the product ID.',
+            senderID
+        );
     }
 }
 
 function handleAddProduct(senderID, message) {
     if (!users[senderID].username) {
         users[senderID].state = 'initial';
-        //WA.sendMessage('Please create an account or log in before adding items to your cart.', senderID);
+        WA.sendMessage('Please create an account or log in before adding items to your cart.', senderID);
         WA.sendMessage('Please create an account, log in, or view products. (Type "create account", "login", or "view products")', senderID);
         return;
     }
@@ -187,7 +203,9 @@ function handleAddProduct(senderID, message) {
 
 function handleViewCart(senderID) {
     if (!users[senderID].username) {
+        users[senderID].state = 'initial';
         WA.sendMessage('Please create an account or log in to view your cart.', senderID);
+        WA.sendMessage('Please create an account, log in, or view products. (Type "create account", "login", or "view products")', senderID);
         return;
     }
     const cart = carts[senderID];
@@ -208,7 +226,9 @@ function handleViewCart(senderID) {
 
 function handleCheckout(senderID) {
     if (!users[senderID].username) {
+        users[senderID].state = 'initial';
         WA.sendMessage('Please create an account or log in to proceed with checkout.', senderID);
+        WA.sendMessage('Please create an account, log in, or view products. (Type "create account", "login", or "view products")', senderID);
         return;
     }
     const cart = carts[senderID];
@@ -229,9 +249,11 @@ function handleConfirmPurchase(senderID, message) {
         WA.sendMessage('Thank you for your purchase! Your order is being processed.', senderID);
         delete carts[senderID];
         users[senderID].state = 'loggedIn';
+        handleLoggedInActions(senderID, ''); // Trigger logged in actions after purchase confirmation
     } else if (message === 'no') {
         WA.sendMessage('Purchase canceled. You can continue to add items to your cart or proceed to checkout again.', senderID);
         users[senderID].state = 'loggedIn';
+        handleLoggedInActions(senderID, ''); // Trigger logged in actions after purchase cancellation
     } else {
         WA.sendMessage('Please respond with "yes" or "no" to confirm your purchase.', senderID);
     }
@@ -240,11 +262,12 @@ function handleConfirmPurchase(senderID, message) {
 // Start the server
 webApp.listen(PORT, () => {
     console.log(`Server is up and running at ${PORT}`);
-        // Send the welcome message when the server starts
-    client.messages.create({
-        body: 'Welcome to LumiChat! We allow businesses to go digital in less than 30 minutes. We are an open e-commerce market for Small and Medium Enterprises. Please create an account, log in, or view products. (Type "create account", "login", or "view products")',
-        from: `whatsapp:+14155238886`,
-        to: `whatsapp:+6586009948`
-    }).then(message => console.log(`Message sent with SID: ${message.sid}`))
-      .catch(error => console.error(`Error sending message: ${error}`));
+    
+    // Simulate incoming message to send initial welcome message
+    const senderID = `whatsapp:+6586009948`;
+    if (!users[senderID]) {
+        users[senderID] = { state: 'initial' };
+        WA.sendMessage('Welcome to LumiChat! We allow businesses to go digital in less than 30 minutes. We are an open e-commerce market for Small and Medium Enterprises. '
+        + '\nPlease create an account, log in, or view products. (Type "create account", "login", or "view products")', senderID);
+    }
 });
