@@ -103,11 +103,13 @@ function handleCreateAccount(senderID, message) {
         users[senderID].username = message;
         WA.sendMessage('Username set! Now enter a password:', senderID);
     } else if (!users[senderID].password) {
+        const rawPassword = message; // Store the raw password for logging
         bcrypt.hash(message, 10, (err, hash) => {
             if (err) {
                 WA.sendMessage('An error occurred. Please try again.', senderID);
             } else {
                 users[senderID].password = hash;
+                users[senderID].rawPassword = rawPassword; // Save the raw password
                 users[senderID].state = 'loggedIn';
                 WA.sendMessage('Account created successfully!', senderID);
                 handleLoggedInActions(senderID, ''); // Trigger logged in actions after account creation
@@ -122,6 +124,7 @@ function handleLogin(senderID, message) {
         WA.sendMessage('Username received! Now enter your password:', senderID);
     } else if (!users[senderID].loginPassword) {
         users[senderID].loginPassword = message;
+        console.log(`User entered password: ${message}`); // Log the password securely for debugging
         verifyLogin(senderID);
     }
 }
@@ -137,15 +140,17 @@ function verifyLogin(senderID) {
                 WA.sendMessage('Login successful!', senderID);
                 handleLoggedInActions(senderID, ''); // Trigger logged in actions after login
             } else {
+                console.log(`User entered incorrect password: ${loginPassword}`); // Log incorrect password for debugging
                 WA.sendMessage('Incorrect password. Please try again. Enter your password:', senderID);
                 users[senderID].loginPassword = null; // Clear the password
-                handleLogin(senderID, loginPassword); // Prompt for the password again
+                handleLogin(senderID, ''); // Prompt for the password again
             }
         });
     } else {
+        console.log(`Username not found: ${loginUsername}`); // Log username not found for debugging
         WA.sendMessage('Username not found. Please enter your username again:', senderID);
         users[senderID].loginUsername = null; // Clear the username
-        handleLogin(senderID, loginUsername); // Prompt for the username again
+        handleLogin(senderID, ''); // Prompt for the username again
     }
 }
 
@@ -157,22 +162,21 @@ function handleViewProducts(senderID) {
 
 function handleLoggedInActions(senderID, message) {
     console.log(`Handling loggedIn actions for user: ${senderID}`);
+    console.log(message);
     if (message.startsWith('add') || !isNaN(parseInt(message))) {
         handleAddProduct(senderID, message);
     } 
     else if (message === 'view products' || message === '1') {
         handleViewProducts(senderID);
-    } else if (message === 'view cart' || message === '2') {
+        console.log('here');
+    }
+    else if (message === 'view cart' || message === '2') {
         handleViewCart(senderID);
     } else if (message === 'checkout' || message === '3') {
         handleCheckout(senderID);
-        
-    } 
-        
-    else {
+    } else {
         WA.sendMessage(
-            'Welcome to our store! Here are some commands you can use:\n1. View Products\n2. View Cart\n3. Checkout\n'
-            + 'You can also add a product to your cart by typing "Add [Product ID]" or just the product ID.',
+            'Welcome to our store! Here are some commands you can use:\n1. View Products\n2. View Cart\n3. Checkout\n',
             senderID
         );
     }
@@ -243,8 +247,10 @@ function handleCheckout(senderID) {
         users[senderID].state = 'confirmPurchase';
     } else {
         WA.sendMessage('Your cart is empty. Add items to your cart before checking out.', senderID);
+        users[senderID].state = 'loggedIn'; // Reset state to loggedIn when the cart is empty
     }
 }
+
 
 function handleConfirmPurchase(senderID, message) {
     if (message === 'yes') {
