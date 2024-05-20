@@ -163,8 +163,11 @@ function handleViewProducts(senderID) {
 function handleLoggedInActions(senderID, message) {
     console.log(`Handling loggedIn actions for user: ${senderID}`);
     console.log(message);
-    
-    if (message === 'view products' || message === '1') {
+
+    if (message.startsWith('add') || !isNaN(parseInt(message))) {
+        handleAddProduct(senderID, message);
+    } 
+    else if (message === 'view products' || message === '1') {
         handleViewProducts(senderID);
         console.log('here');
     }
@@ -180,9 +183,10 @@ function handleLoggedInActions(senderID, message) {
     }
 }
 
+
 function handleAddProduct(senderID, message) {
-    if (!users[senderID].username) {
-        users[senderID].state = 'initial';
+    if (!users[senderID] || !users[senderID].username) {
+        users[senderID] = { state: 'initial' };  // Set state to initial if the user object does not exist
         WA.sendMessage('Please create an account or log in before adding items to your cart.', senderID);
         WA.sendMessage('Please create an account, log in, or view products. (Type "create account", "login", or "view products")', senderID);
         return;
@@ -204,6 +208,7 @@ function handleAddProduct(senderID, message) {
         WA.sendMessage('Product not found. Please enter a valid product ID or name.', senderID);
     }
 }
+
 
 function handleViewCart(senderID) {
     if (!users[senderID].username) {
