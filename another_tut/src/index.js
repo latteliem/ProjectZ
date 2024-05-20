@@ -163,10 +163,8 @@ function handleViewProducts(senderID) {
 function handleLoggedInActions(senderID, message) {
     console.log(`Handling loggedIn actions for user: ${senderID}`);
     console.log(message);
-    if (message.startsWith('add')) {
-        handleAddProduct(senderID, message);
-    } 
-    else if (message === 'view products' || message === '1') {
+    
+    if (message === 'view products' || message === '1') {
         handleViewProducts(senderID);
         console.log('here');
     }
