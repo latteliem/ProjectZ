@@ -137,13 +137,15 @@ function verifyLogin(senderID) {
                 WA.sendMessage('Login successful!', senderID);
                 handleLoggedInActions(senderID, ''); // Trigger logged in actions after login
             } else {
-                WA.sendMessage('Incorrect password. Please try again.', senderID);
-                users[senderID].state = 'login';
+                WA.sendMessage('Incorrect password. Please try again. Enter your password:', senderID);
+                users[senderID].loginPassword = null; // Clear the password
+                handleLogin(senderID, loginPassword); // Prompt for the password again
             }
         });
     } else {
-        WA.sendMessage('Username not found. Please try again.', senderID);
-        users[senderID].state = 'login';
+        WA.sendMessage('Username not found. Please enter your username again:', senderID);
+        users[senderID].loginUsername = null; // Clear the username
+        handleLogin(senderID, loginUsername); // Prompt for the username again
     }
 }
 
