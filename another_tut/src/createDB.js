@@ -26,8 +26,8 @@ async function configureMongo() {
       // Creation of database specific to the business
       //await createBusiness('Business1', 'business1@gmail.com', 'test demo business created');
       const bus = await createBusiness('LumiChat', 'business1@gmail.com', 'test demo business created'); 
-      const dbName = bus.busName + '_database';
-      console.log('helllo dbName',dbName);
+      const dbName = bus.busName;
+      console.log('helllo dbName', dbName);
 
       // Connect to the MongoDB server
       await client.connect();
@@ -47,7 +47,7 @@ async function configureMongo() {
       const userCollection = db.collection('userCollection'); //need to check if username exists alr, make primary key incremental
       
       //creating the user(customers) and adding them into the user database specific to the business   
-      await createUser(userCollection, 'Jovin', 'jovin0123','jovinwong@gmail.com');
+      await createUser(userCollection, 'Jovin', 'jovin0123');
 
       console.log('Document inserted successfully');
     } catch (err) {
@@ -201,13 +201,13 @@ async function createProduct(prodCollection, prodName, prodDesc, prodSPrice, pro
 //   }
 // }
 
-async function createUser(userCollection, userName, userPassword, userEmail) {
+async function createUser(userCollection, userName, userPassword) {
   try {
       const userCount = await userCollection.countDocuments();
 
       // Assign the next value to userID
       const uniIdentifier = userCount + 1;
-      const user = new User(uniIdentifier, userName, userPassword, userEmail);
+      const user = new User(uniIdentifier, userName, userPassword);
 
       console.log('User account created successfully');
       try {
@@ -252,3 +252,5 @@ async function createUser(userCollection, userName, userPassword, userEmail) {
 
 // Call the function to configure MongoDB
 configureMongo();
+module.exports = configureMongo();
+module.exports = createUser();
