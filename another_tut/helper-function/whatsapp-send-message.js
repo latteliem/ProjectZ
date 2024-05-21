@@ -8,7 +8,7 @@ function sendMessage(body, to) {
             body: body,
             from: 'whatsapp:+14155238886',
             to: to
-        })
+        })  
         .then(message => console.log(`Message sent: ${message.sid}`))
         .catch(error => console.error('Error sending message:', error));
 }

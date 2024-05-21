@@ -8,12 +8,24 @@ const twilio = require('twilio');
 // Import data structures
 const { products, getAllProducts } = require('./products');
 const carts = require('./cart');
-const WA = require('../helper-function/whatsapp-send-message');
+//const WA = require('../helper-function/whatsapp-send-message');
 
 // Twilio setup
 const accountSid = process.env.TWILIO_ACCOUNT_SID;
 const authToken = process.env.TWILIO_AUTH_TOKEN;
+
 const client = new twilio(accountSid, authToken);
+
+const WA = client.messages
+    .create({
+        body: body,
+        from: 'whatsapp:+14155238886',
+        to: to
+    })  
+    .then(message => console.log(`Message sent: ${message.sid}`))
+    .catch(error => console.error('Error sending message:', error));
+
+//const client = new twilio(accountSid, authToken);
 
 // Twilio phone numbers
 const twilioPhoneNumber = process.env.TWILIO_PHONE_NUMBER;
