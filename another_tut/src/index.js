@@ -40,7 +40,7 @@ webApp.get('/', (req, res) => {
 webApp.post('/whatsapp', (req, res) => {
     const message = req.body.Body.toLowerCase();
     const senderID = req.body.From;
-
+    
     if (!users[senderID]) {
         users[senderID] = { state: 'initial' };
         WA.sendMessage('Welcome to LumiChat! We allow businesses to go digital in less than 30 minutes. We are an open e-commerce market for Small and Medium Enterprises. '
