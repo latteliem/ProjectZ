@@ -11,6 +11,11 @@ const Business = require('./businessClass');
 const Product = require('./productClass'); 
 const User = require('./userClass');
 const { MongoClient } = require('mongodb');
+
+// Setting up Stripe API
+const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY, {
+    apiVersion: '2023-10-16'
+});
  
 // Import data structures
 const { products, getAllProducts } = require('./products');
@@ -18,8 +23,8 @@ const carts = require('./cart');
 const WA = require('../helper-function/whatsapp-send-message');
 
 // Log to verify if the variables are loaded
-console.log('TWILIO_ACCOUNT_SID:', process.env.TWILIO_ACCOUNT_SID);
-console.log('TWILIO_AUTH_TOKEN:', process.env.TWILIO_AUTH_TOKEN);
+// console.log('TWILIO_ACCOUNT_SID:', process.env.TWILIO_ACCOUNT_SID);
+// console.log('TWILIO_AUTH_TOKEN:', process.env.TWILIO_AUTH_TOKEN);
 
 // Twilio setup
 const accountSid = process.env.TWILIO_ACCOUNT_SID;
@@ -32,7 +37,7 @@ if (!accountSid || !authToken) {
 // Twilio phone numbers
 const twilioPhoneNumber = process.env.TWILIO_PHONE_NUMBER;
 const userPhoneNumber = process.env.USER_PHONE_NUMBER;
- 
+//const db = connectToDatabase(); // TO INITIALISE CONNECTION TO DATABASE SOON
 //database set up
 let userCollection;
 let productCollection;
@@ -49,12 +54,13 @@ webApp.use(bodyParser.json());
  
 // Server Port
 const PORT = process.env.PORT || 3000;
- 
+
 // Home route
 webApp.get('/', (req, res) => {
     res.send('Hello World.!');
 });
- 
+
+
 webApp.post('/whatsapp', async (req, res) => {
     const message = req.body.Body.toLowerCase().trim();
     const senderID = req.body.From;
@@ -123,9 +129,9 @@ function connectToDatabase(){
         const dbName = 'LumiChat_database';
 
         client.connect();
-        console.log('Connected to database');
 
         const db = client.db(dbName);
+        console.log('Connected to database');
         return db;
         
     } catch (err) {
@@ -133,10 +139,9 @@ function connectToDatabase(){
     }
 }
 
-
 async function handleCreateAccount(senderID, message) {
     // setting up database
-    const db = await connectToDatabase();
+    const db = await connectToDatabase(); //make db available at all times
 
     // using or creating a userCollection for the specific database
     const userCollection = db.collection('userCollection');
@@ -206,10 +211,13 @@ async function verifyLogin(senderID) {
         console.log('Login password:', user.userpassword);
         console.log('Login username:', loginUsername);
         console.log('Login password:', loginPassword);
-
+        
         if (loginPassword && user.userpassword) {
             //const hash = await bcrypt.hash(loginPassword, 10)
-            const match = await bcrypt.compare({loginPassword: user.userpassword} );//, (err, result) => { ///CANNNOT RESOLVEE
+            console.log('hellllllo');
+            const upassword = user.userpassword;
+            //need to hash the incoming password then compare
+            const match = await bcrypt.compare({upassword : loginPassword} );//, (err, result) => { ///CANNNOT RESOLVEE //create function
             if (match) {
                 users[senderID].state = 'loggedIn';
                 WA.sendMessage('Login successful!', senderID);
@@ -234,12 +242,9 @@ async function verifyLogin(senderID) {
 } 
  
 async function handleViewProducts(senderID) {
-    const db = await connectToDatabase();
+    const db = await connectToDatabase(); //connecting to database
 
-    // using or creating a userCollection for the specific database
-    const productCollection = db.collection('productCollection');
-    const product = new Product();
-    const productMessage = product.getAllProducts(productCollection);
+    const productMessage = await Product.getAllProducts(db);
 
     WA.sendMessage(productMessage, senderID);
     users[senderID].state = 'loggedIn'; // Reset state to loggedIn after viewing products
@@ -269,46 +274,99 @@ function handleLoggedInActions(senderID, message) {
 }
  
  
-function handleAddProduct(senderID, message) {
+async function handleAddProduct(senderID, message) {
+    const db = connectToDatabase();
+    
     if (!users[senderID] || !users[senderID].username) {
         users[senderID] = { state: 'initial' };  // Set state to initial if the user object does not exist
-        WA.sendMessage('Please create an account or log in before adding items to your cart.', senderID);
+        //WA.sendMessage('Please create an account or log in before adding items to your cart.', senderID);
         WA.sendMessage('Please create an account, log in, or view products. (Type "create account", "login", or "view products")', senderID);
         return;
     }
+    // finding and retriving the user's shopping cart from the database
+    const userCollection = db.collection('userCollection');
+    const userRecord = await userCollection.findOne({username : users[senderID].username});
+    console.log('input username', users[senderID].username);
+    //const shoppingCart = user.shoppingCart; //supposed that the user exists in the userCollection, since the above codes would cover for that
+    console.log('user account', userRecord);
+    if (!userRecord){
+        console.log(`Username not found: ${users[senderID].username}`);
+        WA.sendMessage('Username not found. Please enter your username again:', senderID);
+        users[senderID].loginUsername = null;
+        return handleLogin(senderID, '');
+    }
+    
     let productId;
+    let quantityToPurchase;
     if (message.startsWith('add')) {
         productId = parseInt(message.split(' ')[1]);
+        quantityToPurchase = parseInt(message.split(',')[1]);
+        console.log('quantityToPurchase', quantityToPurchase);
     } else {
         productId = parseInt(message);
+        quantityToPurchase = parseInt(message);
     }
-    const product = products.find(p => p.id === productId);
+    
+    console.log('productid', productId);
+    console.log('type of productId', typeof productId);
+    const productCollection = db.collection('productCollection');
+    const product = await productCollection.findOne({ prodid : productId }); //problem here
+    //console.log('product that user wanna buy', product.prodName);
     if (product) {
-        if (!carts[senderID]) {
-            carts[senderID] = [];
+        console.log('product that user wanna buy', product.prodname);
+        if (quantityToPurchase <= product.prodquan){ //checking if there are enough stocks available for sales
+            addToCart(userRecord, product, quantityToPurchase);//.prodid, product.prodName, product.prodsprice, quantityToPurchase);
+        }else{
+            WA.sendMessage('Insufficient stock for purchase, we only have `${product.prodquan}` left!', senderID);
         }
-        carts[senderID].push(product);
-        WA.sendMessage(`${product.name} has been added to your cart. Type 'view cart' to see your cart or 'checkout' to proceed to checkout.`, senderID);
+        
+        
+        // Update the user in the database
+        await userCollection.updateOne(
+            { userid: userRecord.userid },
+            { $set: { shoppingCart: userRecord.shoppingCart } }
+        );
+        
+        WA.sendMessage(`${product.prodname} has been added to your cart. Type 'view cart' to see your cart or 'checkout' to proceed to checkout.`, senderID);
     } else {
         WA.sendMessage('Product not found. Please enter a valid product ID or name.', senderID);
     }
 }
  
- 
-function handleViewCart(senderID) {
+async function addToCart(user, product, quantityToPurchase){//prodID, prodName, prodSellPrice, prodQuantity){
+    const productInCart = { //creating a function to add the product and the quantity of product that the user would like to purchase
+        prodid: product.prodid,
+        prodname: product.prodname,
+        prodsprice: product.prodsprice,
+        quantityToPurchase
+    };
+    user.shoppingCart.push(productInCart);    //adds the product that the user wants to buy to the empty shopping cart array    
+}
+
+async function handleViewCart(senderID) {
+    const db = connectToDatabase();
+
     if (!users[senderID].username) {
         users[senderID].state = 'initial';
-        WA.sendMessage('Please create an account or log in to view your cart.', senderID);
+        //WA.sendMessage('Please create an account or log in to view your cart.', senderID);
         WA.sendMessage('Please create an account, log in, or view products. (Type "create account", "login", or "view products")', senderID);
         return;
     }
-    const cart = carts[senderID];
-    if (cart && cart.length > 0) {
-        let cartMessage = 'Your Cart:\n';
+
+    const userCollection = db.collection('userCollection');
+    const user = await userCollection.findOne({ username : users[senderID].username});
+    //const shoppingCart = user.shoppingCart;
+    //const cart = carts[senderID];
+    //console.log('cart', cart);
+    if (!user){
+        WA.sendMessage('User does not exist', senderID);
+    }
+    if (user.shoppingCart.length > 0) {
+        let cartMessage = 'Your shopping cart contains:\n';
         let total = 0;
-        cart.forEach(item => {
-            cartMessage += `${item.name} - $${item.price}\n`;
-            total += item.price;
+        user.shoppingCart.forEach(item => {
+            cartMessage += `${item.prodname} - $${item.prodsprice}\n`;
+            total += item.prodsprice;
         });
         cartMessage += `Total: $${total}\n`;
         cartMessage += 'Type "add" followed by the product ID to add more items or "checkout" to proceed.';
@@ -318,18 +376,24 @@ function handleViewCart(senderID) {
     }
 }
  
-function handleCheckout(senderID) {
+async function handleCheckout(senderID) {
+    const db = connectToDatabase();
+    
     if (!users[senderID].username) {
         users[senderID].state = 'initial';
         WA.sendMessage('Please create an account or log in to proceed with checkout.', senderID);
         WA.sendMessage('Please create an account, log in, or view products. (Type "create account", "login", or "view products")', senderID);
         return;
     }
-    const cart = carts[senderID];
-    if (cart && cart.length > 0) {
+
+    const userCollection = db.collection('userCollection');
+    const user = await userCollection.findOne({ username : users[senderID].username});
+
+    //const cart = carts[senderID];
+    if (user.shoppingCart.length > 0) {
         let total = 0;
-        cart.forEach(item => {
-            total += item.price;
+        user.shoppingCart.forEach(item => {
+            total += item.prodsprice * item.quantityToPurchase;
         });
         WA.sendMessage(`Your total is $${total}. Do you confirm the purchase? (yes/no)`, senderID);
         users[senderID].state = 'confirmPurchase';
@@ -338,7 +402,6 @@ function handleCheckout(senderID) {
         users[senderID].state = 'loggedIn'; // Reset state to loggedIn when the cart is empty
     }
 }
- 
  
 function handleConfirmPurchase(senderID, message) {
     if (message === 'yes') {
@@ -355,6 +418,8 @@ function handleConfirmPurchase(senderID, message) {
     }
 }
  
+
+
 // Start the server
 webApp.listen(PORT, () => {
     console.log(`Server is up and running at ${PORT}`);
@@ -367,3 +432,4 @@ webApp.listen(PORT, () => {
         + '\nPlease create an account, log in, or view products. (Type "create account", "login", or "view products")', senderID);
     }
 });
+

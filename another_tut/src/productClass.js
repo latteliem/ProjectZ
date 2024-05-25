@@ -24,57 +24,66 @@ class Product{
     }
 
     updateProdName(productID, newProdName){
-        this.proid = productID;
+        this.prodid = productID;
         this.prodname = newProdName; 
     }
 
     updateProdDesc(productID, newProdDesc){
-        this.proid = productID;
+        this.prodid = productID;
         this.proddesc = newProdDesc; 
     }
 
     updateProdSellPrice(productID, newProdSellPrice){
-        this.proid = productID;
+        this.prodid = productID;
         this.prodsprice = newProdSellPrice; 
     }
 
     updateProdCostPrice(productID, newProdCostPrice){
-        this.proid = productID;
+        this.prodid = productID;
         this.prodcprice = newProdCostPrice; 
     }
 
     updateProdQuan(productID, newProdQuan){
-        this.proid = productID;
+        this.prodid = productID;
         this.prodquan = newProdQuan; 
     }
 
     updateProdCat(productID, newProdCat){
-        this.proid = productID;
+        this.prodid = productID;
         this.prodcat = newProdCat; 
     }
 
     updateProdImage(productID, newProdImage){
-        this.proid = productID;
+        this.prodid = productID;
         this.prodImage = newProdImage; 
     }
 
-    async getAllProducts(productCollection) {
-        if (Array.isArray(productCollection)) {
-            if (productCollection.length === 0) {
-                return 'No products available at the moment. Please check back later.';
-            }
-        
-            let productMessage = 'Available Products:\n';
-            products.forEach(product => {
-            // Access fields of each document using dot notation or bracket notation
-                productMessage += `*${product.prodid}*. ${product.prodname} - $${product.prodsprice}\n`;
-                productMessage += `Description: ${product.proddesc}\n\n`;
-            });
-            productMessage += 'Please enter "Add" and its respective ID i.e. Add 1, to add it to cart.';
-            return productMessage;
+    static async getAllProducts(db) {
+        const productCollection = db.collection('productCollection');
+
+        const productCount = await productCollection.countDocuments();
+        if (productCount === 0) {
+            return 'No products available at the moment. Please check back later.';
         }
+        
+        const products = await productCollection.find().toArray();
+        let productMessage = 'Available Products:\n';
+        
+        products.forEach(product => {
+        // Access fields of each document using dot notation or bracket notation
+            //console.log(product);
+            productMessage += `*${product.prodid}*. ${product.prodname} - $${product.prodsprice}\n`;
+            productMessage += `Brand: ${product.prodbrand}\n`;
+            productMessage +=  `Category: ${product.prodcat}\n`;
+            productMessage += `Description: ${product.proddesc}\n\n`;
+            //console.log('productMessage\n', productMessage);
+        });
+
+        productMessage += 'Please enter "Add", its respective ID and quantity that you would like to purchase i.e. Add 1, 2, to add it to cart.';
+        return productMessage;
     }
 }
+
 
 module.exports = Product;
 
