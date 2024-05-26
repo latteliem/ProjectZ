@@ -173,14 +173,15 @@ function handleCreateAccount(senderID, message) {
                 bcrypt.hash(message, 10).then(hash => {
                     users[senderID].password = hash;
                     users[senderID].rawPassword = rawPassword; // Save the raw password
-                    users[senderID].state = 'loggedIn';
-                    WA.sendMessage('Account created successfully!', senderID);
-                    handleLoggedInActions(senderID, ''); // Trigger logged in actions after account creation
                     
                     const newUser = new User(uniIdentifier, users[senderID].username, users[senderID].password);
                     userCollection.insertOne(newUser).then(() => {
                         console.log('New user inserted successfully!');
                         console.log(newUser);
+                        
+                        users[senderID].state = 'loggedIn';
+                        WA.sendMessage('Account created successfully!', senderID);
+                        handleLoggedInActions(senderID, ''); // Trigger logged in actions after account creation
                     }).catch(err => {
                         console.error(err);
                         WA.sendMessage('An error occurred. Please try again.', senderID);
@@ -199,6 +200,7 @@ function handleCreateAccount(senderID, message) {
         WA.sendMessage('An error occurred. Please try again.', senderID);
     });
 }
+
 
  
 function handleLogin(senderID, message) {
