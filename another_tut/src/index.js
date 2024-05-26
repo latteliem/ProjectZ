@@ -288,64 +288,68 @@ function handleLoggedInActions(senderID, message) {
 }
  
  
-async function handleAddProduct(senderID, message) {
-    const db = connectToDatabase();
-    
-    if (!users[senderID] || !users[senderID].username) {
-        users[senderID] = { state: 'initial' };  // Set state to initial if the user object does not exist
-        //WA.sendMessage('Please create an account or log in before adding items to your cart.', senderID);
-        WA.sendMessage('Please create an account, log in, or view products. (Type "create account", "login", or "view products")', senderID);
-        return;
-    }
-    // finding and retriving the user's shopping cart from the database
-    const userCollection = db.collection('userCollection');
-    const userRecord = await userCollection.findOne({username : users[senderID].username});
-    console.log('input username', users[senderID].username);
-    //const shoppingCart = user.shoppingCart; //supposed that the user exists in the userCollection, since the above codes would cover for that
-    console.log('user account', userRecord);
-    if (!userRecord){
-        console.log(`Username not found: ${users[senderID].username}`);
-        WA.sendMessage('Username not found. Please enter your username again:', senderID);
-        users[senderID].loginUsername = null;
-        return handleLogin(senderID, '');
-    }
-    
-    let productId;
-    let quantityToPurchase;
-    if (message.startsWith('add')) {
-        productId = parseInt(message.split(' ')[1]);
-        quantityToPurchase = parseInt(message.split(',')[1]);
-        console.log('quantityToPurchase', quantityToPurchase);
-    } else {
-        productId = parseInt(message);
-        quantityToPurchase = parseInt(message);
-    }
-    
-    console.log('productid', productId);
-    console.log('type of productId', typeof productId);
-    const productCollection = db.collection('productCollection');
-    const product = await productCollection.findOne({ prodid : productId }); //problem here
-    //console.log('product that user wanna buy', product.prodName);
-    if (product) {
-        console.log('product that user wanna buy', product.prodname);
-        if (quantityToPurchase <= product.prodquan){ //checking if there are enough stocks available for sales
-            addToCart(userRecord, product, quantityToPurchase);//.prodid, product.prodName, product.prodsprice, quantityToPurchase);
-        }else{
-            WA.sendMessage('Insufficient stock for purchase, we only have `${product.prodquan}` left!', senderID);
+function handleAddProduct(senderID, message) {
+    connectToDatabase().then(db => {
+        if (!users[senderID] || !users[senderID].username) {
+            users[senderID] = { state: 'initial' };
+            WA.sendMessage('Please create an account, log in, or view products. (Type "create account", "login", or "view products")', senderID);
+            return;
         }
-        
-        
-        // Update the user in the database
-        await userCollection.updateOne(
-            { userid: userRecord.userid },
-            { $set: { shoppingCart: userRecord.shoppingCart } }
-        );
-        
-        WA.sendMessage(`${product.prodname} has been added to your cart. Type 'view cart' to see your cart or 'checkout' to proceed to checkout.`, senderID);
-    } else {
-        WA.sendMessage('Product not found. Please enter a valid product ID or name.', senderID);
-    }
+
+        const userCollection = db.collection('userCollection');
+        userCollection.findOne({ username: users[senderID].username }).then(userRecord => {
+            if (!userRecord) {
+                console.log(`Username not found: ${users[senderID].username}`);
+                WA.sendMessage('Username not found. Please enter your username again:', senderID);
+                users[senderID].loginUsername = null;
+                return handleLogin(senderID, '');
+            }
+
+            let productId;
+            let quantityToPurchase;
+            if (message.startsWith('add')) {
+                productId = parseInt(message.split(' ')[1]);
+                quantityToPurchase = parseInt(message.split(',')[1]);
+            } else {
+                productId = parseInt(message);
+                quantityToPurchase = parseInt(message);
+            }
+
+            const productCollection = db.collection('productCollection');
+            productCollection.findOne({ prodid: productId }).then(product => {
+                if (product) {
+                    if (quantityToPurchase <= product.prodquan) {
+                        addToCart(userRecord, product, quantityToPurchase);
+                    } else {
+                        WA.sendMessage(`Insufficient stock for purchase, we only have ${product.prodquan} left!`, senderID);
+                    }
+
+                    userCollection.updateOne(
+                        { userid: userRecord.userid },
+                        { $set: { shoppingCart: userRecord.shoppingCart } }
+                    ).then(() => {
+                        WA.sendMessage(`${product.prodname} has been added to your cart. Type 'view cart' to see your cart or 'checkout' to proceed to checkout.`, senderID);
+                    }).catch(err => {
+                        console.error(err);
+                        WA.sendMessage('An error occurred while updating the cart. Please try again.', senderID);
+                    });
+                } else {
+                    WA.sendMessage('Product not found. Please enter a valid product ID or name.', senderID);
+                }
+            }).catch(err => {
+                console.error(err);
+                WA.sendMessage('An error occurred. Please try again.', senderID);
+            });
+        }).catch(err => {
+            console.error(err);
+            WA.sendMessage('An error occurred. Please try again.', senderID);
+        });
+    }).catch(err => {
+        console.error(err);
+        WA.sendMessage('An error occurred. Please try again.', senderID);
+    });
 }
+
  
 async function addToCart(user, product, quantityToPurchase){//prodID, prodName, prodSellPrice, prodQuantity){
     const productInCart = { //creating a function to add the product and the quantity of product that the user would like to purchase
