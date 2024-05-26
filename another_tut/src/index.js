@@ -161,6 +161,8 @@ async function handleCreateAccount(senderID, message) {
             //WA.sendMessage('Username already exist. Enter another username!', senderID);
             console.log('Username already exists:', users[senderID].username);
             // NEED TO DO ERROR HANDLING! handleCreateAccount(senderID, message);
+            users[senderID].username = null; // Clear the username
+            WA.sendMessage('Username already exists. Please choose another username:', senderID);
             return;
         }
         WA.sendMessage('Username set! Now enter a password:', senderID);
