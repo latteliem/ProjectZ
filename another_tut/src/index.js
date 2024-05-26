@@ -257,14 +257,13 @@ async function verifyLogin(senderID) {
 
  
 async function handleViewProducts(senderID) {
-    const db = await connectToDatabase(); //connecting to database
+    const db = await connectToDatabase(); // connecting to database
 
     const productMessage = await Product.getAllProducts(db);
-
     WA.sendMessage(productMessage, senderID);
-    users[senderID].state = 'loggedIn'; // Reset state to loggedIn after viewing products
+    users[senderID].state = 'viewProducts'; // Set state to viewProducts after viewing products
 }
- 
+
 function handleLoggedInActions(senderID, message) {
     console.log(`Handling loggedIn actions for user: ${senderID}`);
     console.log(message);
@@ -275,8 +274,12 @@ function handleLoggedInActions(senderID, message) {
         handleViewCart(senderID);
     } else if (message === 'checkout' || message === '3') {
         handleCheckout(senderID);
-    } else if (message.startsWith('add') || !isNaN(parseInt(message))) {
-        handleAddProduct(senderID, message);
+    } else if (message.startsWith('add') || (users[senderID].state === 'viewProducts' && !isNaN(parseInt(message)))) {
+        if (!message.startsWith('add')) {
+            WA.sendMessage('To add a product, please use the format "add [productId]". For example, "add 1".', senderID);
+        } else {
+            handleAddProduct(senderID, message);
+        }
     } else {
         WA.sendMessage(
             'Welcome to our store! Here are some commands you can use:\n1. View Products\n2. View Cart\n3. Checkout\n',
