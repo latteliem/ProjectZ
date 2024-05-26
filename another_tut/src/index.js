@@ -124,7 +124,7 @@ function handleInitial(senderID, message) {
 
 function connectToDatabase() {
     const uri = process.env.MONGODB_URI;
-    const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
+    const client = new MongoClient(uri);
     const dbName = 'LumiChat_database';
 
     return client.connect().then(() => {
