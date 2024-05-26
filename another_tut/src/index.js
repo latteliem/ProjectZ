@@ -170,7 +170,6 @@ function handleCreateAccount(senderID, message) {
                 });
             } else if (!users[senderID].password) {
                 const rawPassword = message; // Store the raw password for logging
-                //console.log(rawPassword);
                 bcrypt.hash(message, 10).then(hash => {
                     users[senderID].password = hash;
                     users[senderID].rawPassword = rawPassword; // Save the raw password
@@ -200,6 +199,7 @@ function handleCreateAccount(senderID, message) {
         WA.sendMessage('An error occurred. Please try again.', senderID);
     });
 }
+
  
 function handleLogin(senderID, message) {
     if (!users[senderID].loginUsername) {
