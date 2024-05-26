@@ -268,18 +268,15 @@ async function handleViewProducts(senderID) {
 function handleLoggedInActions(senderID, message) {
     console.log(`Handling loggedIn actions for user: ${senderID}`);
     console.log(message);
- 
-    if (message.startsWith('add') || !isNaN(parseInt(message))) {
-        handleAddProduct(senderID, message);
-    }
-    else if (message === 'view products' || message === '1') {
+
+    if (message === 'view products' || message === '1') {
         handleViewProducts(senderID);
-        console.log('here');
-    }
-    else if (message === 'view cart' || message === '2') {
+    } else if (message === 'view cart' || message === '2') {
         handleViewCart(senderID);
     } else if (message === 'checkout' || message === '3') {
         handleCheckout(senderID);
+    } else if (message.startsWith('add') || !isNaN(parseInt(message))) {
+        handleAddProduct(senderID, message);
     } else {
         WA.sendMessage(
             'Welcome to our store! Here are some commands you can use:\n1. View Products\n2. View Cart\n3. Checkout\n',
@@ -287,7 +284,7 @@ function handleLoggedInActions(senderID, message) {
         );
     }
 }
- 
+
  
 function handleAddProduct(senderID, message) {
     connectToDatabase().then(db => {
