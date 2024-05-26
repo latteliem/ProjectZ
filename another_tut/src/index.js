@@ -139,54 +139,67 @@ function connectToDatabase(){
     }
 }
 
-async function handleCreateAccount(senderID, message) {
+function handleCreateAccount(senderID, message) {
     // setting up database
-    const db = await connectToDatabase(); //make db available at all times
-
-    // using or creating a userCollection for the specific database
-    const userCollection = db.collection('userCollection');
-    const highestIdDoc = await userCollection.findOne({}, { sort: { userid: -1 } });
-    const highestId = highestIdDoc ? highestIdDoc.userid : 0;
-
-    // Assign the next value to userID
-    const uniIdentifier = highestId + 1;
-
-    if (!users[senderID].username) {
-        users[senderID].username = message;
-
-        //checking if the username exists  //user => user.username === loginUsername)
-        const existingUser = await userCollection.findOne({ username: users[senderID].username});
-        console.log('existingUser', existingUser);
-        if (existingUser) {
-            //WA.sendMessage('Username already exist. Enter another username!', senderID);
-            console.log('Username already exists:', users[senderID].username);
-            // NEED TO DO ERROR HANDLING! handleCreateAccount(senderID, message);
-            users[senderID].username = null; // Clear the username
-            WA.sendMessage('Username already exists. Please choose another username:', senderID);
-            return;
-        }
-        WA.sendMessage('Username set! Now enter a password:', senderID);
-    } else if (!users[senderID].password) {
-        const rawPassword = message; // Store the raw password for logging
-        //console.log(rawPassword);
-        try{
-            const hash = await bcrypt.hash(message, 10)
-            users[senderID].password = hash;
-            users[senderID].rawPassword = rawPassword; // Save the raw password
-            users[senderID].state = 'loggedIn';
-            WA.sendMessage('Account created successfully!', senderID);
-            handleLoggedInActions(senderID, ''); // Trigger logged in actions after account creation
-            
-            const newUser = new User(uniIdentifier, users[senderID].username, users[senderID].password);
-            await userCollection.insertOne(newUser);
-            console.log('New user inserted successfully!');
-            console.log(newUser);
+    connectToDatabase().then(db => {
+        // using or creating a userCollection for the specific database
+        const userCollection = db.collection('userCollection');
         
-        } catch (err) {
+        userCollection.findOne({}, { sort: { userid: -1 } }).then(highestIdDoc => {
+            const highestId = highestIdDoc ? highestIdDoc.userid : 0;
+
+            // Assign the next value to userID
+            const uniIdentifier = highestId + 1;
+
+            if (!users[senderID].username) {
+                users[senderID].username = message;
+
+                // checking if the username exists
+                userCollection.findOne({ username: users[senderID].username }).then(existingUser => {
+                    console.log('existingUser', existingUser);
+                    if (existingUser) {
+                        // Username already exists
+                        console.log('Username already exists:', users[senderID].username);
+                        users[senderID].username = null; // Clear the username
+                        WA.sendMessage('Username already exists. Please choose another username:', senderID);
+                        return;
+                    }
+                    WA.sendMessage('Username set! Now enter a password:', senderID);
+                }).catch(err => {
+                    console.error(err);
+                    WA.sendMessage('An error occurred. Please try again.', senderID);
+                });
+            } else if (!users[senderID].password) {
+                const rawPassword = message; // Store the raw password for logging
+                //console.log(rawPassword);
+                bcrypt.hash(message, 10).then(hash => {
+                    users[senderID].password = hash;
+                    users[senderID].rawPassword = rawPassword; // Save the raw password
+                    users[senderID].state = 'loggedIn';
+                    WA.sendMessage('Account created successfully!', senderID);
+                    handleLoggedInActions(senderID, ''); // Trigger logged in actions after account creation
+                    
+                    const newUser = new User(uniIdentifier, users[senderID].username, users[senderID].password);
+                    userCollection.insertOne(newUser).then(() => {
+                        console.log('New user inserted successfully!');
+                        console.log(newUser);
+                    }).catch(err => {
+                        console.error(err);
+                        WA.sendMessage('An error occurred. Please try again.', senderID);
+                    });
+                }).catch(err => {
+                    console.error(err);
+                    WA.sendMessage('An error occurred. Please try again.', senderID);
+                });
+            }
+        }).catch(err => {
             console.error(err);
             WA.sendMessage('An error occurred. Please try again.', senderID);
-        }
-    }    
+        });
+    }).catch(err => {
+        console.error(err);
+        WA.sendMessage('An error occurred. Please try again.', senderID);
+    });
 }
  
 function handleLogin(senderID, message) {
