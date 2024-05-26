@@ -122,22 +122,21 @@ function handleInitial(senderID, message) {
     }
 }
 
-function connectToDatabase(){
+function connectToDatabase() {
     const uri = process.env.MONGODB_URI;
     const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
-    try{
-        const dbName = 'LumiChat_database';
+    const dbName = 'LumiChat_database';
 
-        client.connect();
-
+    return client.connect().then(() => {
         const db = client.db(dbName);
         console.log('Connected to database');
         return db;
-        
-    } catch (err) {
+    }).catch(err => {
         console.error(err);
-    }
+        throw err;
+    });
 }
+
 
 function handleCreateAccount(senderID, message) {
     // setting up database
@@ -443,8 +442,8 @@ webApp.listen(PORT, () => {
     const senderID = `whatsapp:+6586009948`;
     if (!users[senderID]) {
         users[senderID] = { state: 'initial' };
-        WA.sendMessage('Welcome to LumiChat! We allow businesses to go digital in less than 30 minutes. We are an open e-commerce market for Small and Medium Enterprises. '
-        + '\nPlease create an account, log in, or view products. (Type "create account", "login", or "view products")', senderID);
+        //WA.sendMessage('Welcome to LumiChat! We allow businesses to go digital in less than 30 minutes. We are an open e-commerce market for Small and Medium Enterprises. '
+        //+ '\nPlease create an account, log in, or view products. (Type "create account", "login", or "view products")', senderID);
     }
 });
 
