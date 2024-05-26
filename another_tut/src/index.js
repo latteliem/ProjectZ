@@ -219,8 +219,8 @@ async function verifyLogin(senderID) {
 
     // finding username in database
     const { loginUsername, loginPassword } = users[senderID];
-    const user =  await userCollection.findOne({ username: loginUsername});
-    if (user){
+    const user = await userCollection.findOne({ username: loginUsername });
+    if (user) {
         console.log('User found:', user); // Log the found user object for debugging
         console.log('Login password:', user.userpassword);
         console.log('Login username:', loginUsername);
@@ -228,10 +228,9 @@ async function verifyLogin(senderID) {
         
         if (loginPassword && user.userpassword) {
             //const hash = await bcrypt.hash(loginPassword, 10)
-            console.log('hellllllo');
             const upassword = user.userpassword;
             //need to hash the incoming password then compare
-            const match = await bcrypt.compare({upassword : loginPassword} );//, (err, result) => { ///CANNNOT RESOLVEE //create function
+            const match = await bcrypt.compare(loginPassword, upassword);
             if (match) {
                 users[senderID].state = 'loggedIn';
                 WA.sendMessage('Login successful!', senderID);
@@ -245,15 +244,15 @@ async function verifyLogin(senderID) {
         } else {
             console.error('Password is missing for comparison.');
             WA.sendMessage('An error occurred. Please try again later.', senderID);
-        }  
-            
+        }
     } else {
         console.log(`Username not found: ${loginUsername}`); // Log username not found for debugging
         WA.sendMessage('Username not found. Please enter your username again:', senderID);
         users[senderID].loginUsername = null; // Clear the username
         handleLogin(senderID, ''); // Prompt for the username again
     }
-} 
+}
+
  
 async function handleViewProducts(senderID) {
     const db = await connectToDatabase(); //connecting to database
