@@ -1,41 +1,42 @@
-// External packages
-require('dotenv').config();
+import dotenv from 'dotenv';
+dotenv.config();
 
-const express = require('express');
-const bodyParser = require('body-parser');
-const bcrypt = require('bcrypt');
-const twilio = require('twilio');
+import express, { Request, Response } from 'express';
+import bodyParser from 'body-parser';
+import bcrypt from 'bcrypt';
+import twilio from 'twilio';
 
-// Setting up MongoDB database
-const Business = require('./businessClass');
-const Product = require('./productClass');
-const User = require('./userClass');
-const { connectToDatabase, findUserByUsername, findProductById, addToCart, updateUserCart } = require('./databaseHelper');
-
-// Setting up Stripe API
-const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY, {
-    apiVersion: '2023-10-16'
-});
-
-// Import data structures
-const { products, getAllProducts } = require('./products');
-const carts = require('./cart');
-const WA = require('../helper-function/whatsapp-send-message');
+import { connectToDatabase, findUserByUsername, findProductById, addToCart, updateUserCart } from './databaseHelper';
+import Business from './businessClass';
+import Product from './productClass';
+import User from './userClass';
+import { products, getAllProducts } from './products';
+import carts from './cart';
+import WA from '../helper-function/whatsapp-send-message';
 
 // Twilio setup
-const accountSid = process.env.TWILIO_ACCOUNT_SID;
-const authToken = process.env.TWILIO_AUTH_TOKEN;
-const client = new twilio(accountSid, authToken);
+const accountSid = process.env.TWILIO_ACCOUNT_SID!;
+const authToken = process.env.TWILIO_AUTH_TOKEN!;
+const client = twilio(accountSid, authToken);
+
 if (!accountSid || !authToken) {
     throw new Error('TWILIO_ACCOUNT_SID and TWILIO_AUTH_TOKEN must be set');
 }
 
 // Twilio phone numbers
-const twilioPhoneNumber = process.env.TWILIO_PHONE_NUMBER;
-const userPhoneNumber = process.env.USER_PHONE_NUMBER;
+const twilioPhoneNumber = process.env.TWILIO_PHONE_NUMBER!;
+const userPhoneNumber = process.env.USER_PHONE_NUMBER!;
 
 // Temporarily using a users list
-const users = {};
+interface UserState {
+    state: string;
+    username?: string;
+    password?: string;
+    rawPassword?: string;
+    loginUsername?: string;
+    loginPassword?: string;
+}
+const users: { [key: string]: UserState } = {};
 
 // Start the webapp
 const webApp = express();
@@ -48,11 +49,11 @@ webApp.use(bodyParser.json());
 const PORT = process.env.PORT || 3000;
 
 // Home route
-webApp.get('/', (req, res) => {
+webApp.get('/', (req: Request, res: Response) => {
     res.send('Hello World.!');
 });
 
-webApp.post('/whatsapp', async (req, res) => {
+webApp.post('/whatsapp', async (req: Request, res: Response) => {
     const message = req.body.Body.toLowerCase().trim();
     const senderID = req.body.From;
     console.log(`Received message: ${message} from ${senderID}`);
@@ -72,7 +73,7 @@ webApp.post('/whatsapp', async (req, res) => {
     res.status(200).send('Message processed');
 });
 
-function handleUserState(senderID, message) {
+function handleUserState(senderID: string, message: string) {
     console.log(`Handling state for user: ${senderID}, current state: ${users[senderID].state}`);
     switch (users[senderID].state) {
         case 'initial':
@@ -98,7 +99,7 @@ function handleUserState(senderID, message) {
     }
 }
 
-function handleInitial(senderID, message) {
+function handleInitial(senderID: string, message: string) {
     if (message === 'create account') {
         users[senderID].state = 'createAccount';
         WA.sendMessage('Please enter a username:', senderID);
@@ -113,7 +114,7 @@ function handleInitial(senderID, message) {
     }
 }
 
-function handleCreateAccount(senderID, message) {
+function handleCreateAccount(senderID: string, message: string) {
     connectToDatabase().then(db => {
         const userCollection = db.collection('userCollection');
 
@@ -166,7 +167,7 @@ function handleCreateAccount(senderID, message) {
     });
 }
 
-function handleLogin(senderID, message) {
+function handleLogin(senderID: string, message: string) {
     if (!users[senderID].loginUsername) {
         users[senderID].loginUsername = message;
         WA.sendMessage('Username received! Now enter your password:', senderID);
@@ -177,7 +178,7 @@ function handleLogin(senderID, message) {
     }
 }
 
-async function verifyLogin(senderID) {
+async function verifyLogin(senderID: string) {
     const db = await connectToDatabase();
     const userCollection = db.collection('userCollection');
 
@@ -205,14 +206,14 @@ async function verifyLogin(senderID) {
     }
 }
 
-async function handleViewProducts(senderID) {
+async function handleViewProducts(senderID: string) {
     const db = await connectToDatabase();
     const productMessage = await Product.getAllProducts(db);
     WA.sendMessage(productMessage, senderID);
     users[senderID].state = 'viewProducts';
 }
 
-function handleLoggedInActions(senderID, message) {
+function handleLoggedInActions(senderID: string, message: string) {
     if (message === 'view products' || message === '1') {
         handleViewProducts(senderID);
     } else if (message === 'view cart' || message === '2') {
@@ -231,7 +232,7 @@ function handleLoggedInActions(senderID, message) {
     }
 }
 
-function handleAddProduct(senderID, message) {
+function handleAddProduct(senderID: string, message: string) {
     connectToDatabase().then(db => {
         if (!users[senderID] || !users[senderID].username) {
             users[senderID] = { state: 'initial' };
@@ -283,8 +284,8 @@ function handleAddProduct(senderID, message) {
     });
 }
 
-async function handleViewCart(senderID) {
-    const db = connectToDatabase();
+async function handleViewCart(senderID: string) {
+    const db = await connectToDatabase();
 
     if (!users[senderID].username) {
         users[senderID].state = 'initial';
@@ -314,8 +315,8 @@ async function handleViewCart(senderID) {
     }
 }
 
-async function handleCheckout(senderID) {
-    const db = connectToDatabase();
+async function handleCheckout(senderID: string) {
+    const db = await connectToDatabase();
 
     if (!users[senderID].username) {
         users[senderID].state = 'initial';
@@ -340,7 +341,7 @@ async function handleCheckout(senderID) {
     }
 }
 
-function handleConfirmPurchase(senderID, message) {
+function handleConfirmPurchase(senderID: string, message: string) {
     if (message === 'yes') {
         WA.sendMessage('Thank you for your purchase! Your order is being processed.', senderID);
         delete carts[senderID];
@@ -358,7 +359,7 @@ function handleConfirmPurchase(senderID, message) {
 // Start the server
 webApp.listen(PORT, () => {
     console.log(`Server is up and running at ${PORT}`);
-   
+
     // Simulate incoming message to send initial welcome message
     const senderID = `whatsapp:+6586009948`;
     if (!users[senderID]) {
