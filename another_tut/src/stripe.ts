@@ -1,12 +1,15 @@
 // This is a public sample test API key.
+import express from 'express'
+import Stripe from 'stripe';
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+  apiVersion: '2024-04-10'
+});
 
-const stripe = require('stripe')('sk_test_Ou1w6LVt3zmVipDVJsvMeQsc');
 // Replace this endpoint secret with your endpoint's unique secret
 // If you are testing with the CLI, find the secret by running 'stripe listen'
 // If you are using an endpoint defined with the API or dashboard, look in your webhook settings
 // at https://dashboard.stripe.com/webhooks
 const endpointSecret = 'whsec_795b8ff8b1ba0efaa611c174a2a942bbe6aa630b26cc5e45a997c9bae2aa4a48';
-const express = require('express');
 const app = express();
 
 app.post('/webhook', express.raw({type: 'application/json'}), (request, response) => {
@@ -16,6 +19,11 @@ app.post('/webhook', express.raw({type: 'application/json'}), (request, response
   if (endpointSecret) {
     // Get the signature sent by Stripe
     const signature = request.headers['stripe-signature'];
+    if (signature === undefined) {
+      console.log(`⚠️  Webhook signature missing.`);
+      return response.sendStatus(400);
+    }
+    
     try {
       event = stripe.webhooks.constructEvent(
         request.body,
@@ -23,6 +31,7 @@ app.post('/webhook', express.raw({type: 'application/json'}), (request, response
         endpointSecret
       );
     } catch (err) {
+      // @ts-ignore
       console.log(`⚠️  Webhook signature verification failed.`, err.message);
       return response.sendStatus(400);
     }

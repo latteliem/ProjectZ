@@ -6,13 +6,12 @@ import bodyParser from 'body-parser';
 import bcrypt from 'bcrypt';
 import twilio from 'twilio';
 
-import { connectToDatabase, findUserByUsername, findProductById, addToCart, updateUserCart } from './databaseHelper';
-import Business from './businessClass';
-import Product from './productClass';
-import User from './userClass';
-import { products, getAllProducts } from './products';
-import carts from './cart';
-import WA from '../helper-function/whatsapp-send-message';
+import { connectToDatabase, findUserByUsername, findProductById, addToCart, updateUserCart } from './databaseHelper.js';
+import Business from './businessClass.js';
+import Product from './productClass.js';
+import User from './userClass.js';
+import { products, getAllProducts } from './products.js';
+import WA from './helper-function/whatsapp-send-message.js';
 
 // Twilio setup
 const accountSid = process.env.TWILIO_ACCOUNT_SID!;
@@ -143,7 +142,7 @@ function handleCreateAccount(senderID: string, message: string) {
                     users[senderID].password = hash;
                     users[senderID].rawPassword = rawPassword;
 
-                    const newUser = new User(uniIdentifier, users[senderID].username, users[senderID].password);
+                    const newUser = new User(uniIdentifier, users[senderID].username as string, users[senderID].password as string);
                     userCollection.insertOne(newUser).then(() => {
                         users[senderID].state = 'loggedIn';
                         WA.sendMessage('Account created successfully!', senderID);
@@ -327,6 +326,11 @@ async function handleCheckout(senderID: string) {
 
     const userCollection = db.collection('userCollection');
     const user = await userCollection.findOne({ username: users[senderID].username });
+    
+    if (!user) {
+        WA.sendMessage('User does not exist', senderID);
+        return;
+    }
 
     if (user.shoppingCart.length > 0) {
         let total = 0;
@@ -344,7 +348,7 @@ async function handleCheckout(senderID: string) {
 function handleConfirmPurchase(senderID: string, message: string) {
     if (message === 'yes') {
         WA.sendMessage('Thank you for your purchase! Your order is being processed.', senderID);
-        delete carts[senderID];
+        // delete carts[senderID];
         users[senderID].state = 'loggedIn';
         handleLoggedInActions(senderID, '');
     } else if (message === 'no') {

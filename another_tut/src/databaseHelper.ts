@@ -1,7 +1,8 @@
-const { MongoClient } = require('mongodb');
+
+import { MongoClient } from 'mongodb';
 
 const connectToDatabase = () => {
-    const uri = process.env.MONGODB_URI;
+    const uri = process.env.MONGODB_URI as string;
     const client = new MongoClient(uri);
     const dbName = 'LumiChat_database';
 
@@ -51,7 +52,7 @@ const updateUserCart = (userCollection, user) => {
     });
 };
 
-module.exports = {
+export {
     connectToDatabase,
     findUserByUsername,
     findProductById,
