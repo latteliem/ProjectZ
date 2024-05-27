@@ -128,7 +128,7 @@ function handleCreateAccount(senderID: string, message: string) {
 
                 userCollection.findOne({ username: users[senderID].username }).then(existingUser => {
                     if (existingUser) {
-                        users[senderID].username = null;
+                        users[senderID].username = undefined;
                         WA.sendMessage('Username already exists. Please choose another username:', senderID);
                         return;
                     }
@@ -193,7 +193,7 @@ async function verifyLogin(senderID: string) {
                 handleLoggedInActions(senderID, '');
             } else {
                 WA.sendMessage('Incorrect password. Please try again. Enter your password:', senderID);
-                users[senderID].loginPassword = null;
+                users[senderID].loginPassword = undefined;
                 handleLogin(senderID, '');
             }
         } else {
@@ -201,7 +201,7 @@ async function verifyLogin(senderID: string) {
         }
     } else {
         WA.sendMessage('Username not found. Please enter your username again:', senderID);
-        users[senderID].loginUsername = null;
+        users[senderID].loginUsername = undefined;
         handleLogin(senderID, '');
     }
 }
@@ -243,7 +243,7 @@ function handleAddProduct(senderID: string, message: string) {
         findUserByUsername(db, users[senderID].username).then(userRecord => {
             if (!userRecord) {
                 WA.sendMessage('Username not found. Please enter your username again:', senderID);
-                users[senderID].loginUsername = null;
+                users[senderID].loginUsername = undefined;
                 return handleLogin(senderID, '');
             }
 
