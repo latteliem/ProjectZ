@@ -61,12 +61,7 @@ webApp.post('/whatsapp', async (req: Request, res: Response) => {
     if (!users[senderID]) {
         // Send onboarding message
         users[senderID] = { state: 'initial' };
-        await WA.sendMessage(
-            'Welcome to LumiChat! We allow businesses to go digital in less than 30 minutes. We are an open e-commerce market for Small and Medium Enterprises. '
-            + '\nPlease create an account, log in, or view products. (Type "create account", "login", or "view products")',
-            senderID
-        );
-    }
+        console.log('User state is initial!');
 
     handleUserState(senderID, message);
 
