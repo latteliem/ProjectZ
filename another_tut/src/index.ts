@@ -62,6 +62,7 @@ webApp.post('/whatsapp', async (req: Request, res: Response) => {
         // Send onboarding message
         users[senderID] = { state: 'initial' };
         console.log('User state is initial!');
+    }  // <-- Missing closing brace added here
 
     handleUserState(senderID, message);
 
