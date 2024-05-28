@@ -12,6 +12,7 @@ import Product from './productClass.js';
 import User from './userClass.js';
 import { products, getAllProducts } from './products.js';
 import WA from './helper-function/whatsapp-send-message.js';
+import { sendMessage } from './helper-function/whatsapp-send-message.js';
 
 // Twilio setup
 const accountSid = process.env.TWILIO_ACCOUNT_SID!;
@@ -361,12 +362,18 @@ function handleConfirmPurchase(senderID: string, message: string) {
 }
 
 // Start the server
-webApp.listen(PORT, () => {
+webApp.listen(PORT, async () => {
     console.log(`Server is up and running at ${PORT}`);
-
-    // Simulate incoming message to send initial welcome message
-    const senderID = `whatsapp:+6586009948`;
-    if (!users[senderID]) {
-        users[senderID] = { state: 'initial' };
+    
+    // Call the sendMessage function when the server starts
+    try {
+        const userPhoneNumber = process.env.USER_PHONE_NUMBER!; // Ensure this environment variable is set
+        sendMessage('Welcome to LumiChat! We allow businesses to go digital in'+
+        'less than 30 minutes. We are an open e-commerce market for Small and Medium Enterprises.'+ 
+       'Please create an account, log in, or view products. (Type "create account", "login", or "view products")'
+       , userPhoneNumber);
+        console.log('Initial message sent successfully');
+    } catch (error) {
+        console.error('Error sending initial message:', error);
     }
 });
