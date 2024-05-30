@@ -96,7 +96,7 @@ function handleUserState(senderID: string, message: string) {
       handleLogin(senderID, message);
       break;
     case "viewProducts":
-      handleViewProducts(senderID, message);
+      handleViewProductsAction(senderID, message);
       break;
     case "loggedIn":
       handleLoggedInActions(senderID, message);
@@ -118,7 +118,7 @@ function handleInitial(senderID: string, message: string) {
     WA.sendMessage("Please enter your username:", senderID);
   } else if (message === "view products") {
     users[senderID].state = "viewProducts";
-    sendProductList(senderID)
+    handleViewProduct(senderID)
   } else {
     WA.sendMessage(
       'Invalid option. Please type "create account", "login", or "view products".',
@@ -255,7 +255,8 @@ async function verifyLogin(senderID: string) {
   }
 }
 
-function handleViewProducts(senderID: string, message: string) {
+function handleViewProductsAction(senderID: string, message: string) {
+  // TODO: Add a command to revert loggedIn state in order for user to access other commands
   if (!message.startsWith("add")) {
     WA.sendMessage(
       'To add a product, please use the format "add [productId]". For example, "add 1".',
@@ -266,7 +267,7 @@ function handleViewProducts(senderID: string, message: string) {
   }
 }
 
-async function sendProductList(senderID: string) {
+async function handleViewProduct(senderID: string) {
   const db = await connectToDatabase();
   const productMessage = await Product.getAllProducts(db);
   WA.sendMessage(productMessage, senderID);
@@ -275,12 +276,12 @@ async function sendProductList(senderID: string) {
 
 function handleLoggedInActions(senderID: string, message: string) {
   if (message === "view products" || message === "1") {
-    sendProductList(senderID);
+    handleViewProduct(senderID);
   } else if (message === "view cart" || message === "2") {
     handleViewCart(senderID);
   } else if (message === "checkout" || message === "3") {
     handleCheckout(senderID);
-  } else if (
+  } /* else if (
     users[senderID].state === "viewProducts" &&
     !message.startsWith("add")
   ) {
@@ -290,7 +291,7 @@ function handleLoggedInActions(senderID: string, message: string) {
     );
   } else if (message.startsWith("add")) {
     handleAddProduct(senderID, message);
-  } else {
+  }  */else {
     WA.sendMessage(
       "Welcome to our store! Here are some commands you can use:\n1. View Products\n2. View Cart\n3. Checkout\n",
       senderID
