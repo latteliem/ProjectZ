@@ -110,13 +110,13 @@ function handleUserState(senderID: string, message: string) {
 }
 
 function handleInitial(senderID: string, message: string) {
-  if (message === "create account") {
+  if (message === "create account" || message === "1") {
     users[senderID].state = "createAccount";
     WA.sendMessage("Please enter a username:", senderID);
-  } else if (message === "login") {
+  } else if (message === "login" || message === "2") {
     users[senderID].state = "login";
     WA.sendMessage("Please enter your username:", senderID);
-  } else if (message === "view products") {
+  } else if (message === "view products" || message === "3") {
     users[senderID].state = "viewProducts";
     handleViewProduct(senderID)
   } else {
@@ -498,7 +498,7 @@ webApp.listen(PORT, async () => {
     sendMessage(
       "Welcome to LumiChat! We allow businesses to go digital in" +
         "less than 30 minutes. We are an open e-commerce market for Small and Medium Enterprises." +
-        'Please create an account, log in, or view products. (Type "create account", "login", or "view products")',
+        'Please create an account, log in, or view products. (Type *1* for create account, *2* for login, or *3* for viewing product.)',
       userPhoneNumber
     );
     console.log("Initial message sent successfully");
