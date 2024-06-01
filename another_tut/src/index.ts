@@ -121,7 +121,8 @@ function handleInitial(senderID: string, message: string) {
     handleViewProduct(senderID)
   } else {
     WA.sendMessage(
-      'Invalid option. Please type "create account", "login", or "view products".',
+      'Invalid option.'+
+      '\n(Type *1* for create account, *2* for login, or *3* for viewing product.)',
       senderID
     );
   }
@@ -293,7 +294,10 @@ function handleLoggedInActions(senderID: string, message: string) {
     handleAddProduct(senderID, message);
   }  */else {
     WA.sendMessage(
-      "Welcome to our store! Here are some commands you can use:\n1. View Products\n2. View Cart\n3. Checkout\n",
+      "Welcome to our store! Here are some commands you can use:\n"+
+      "Press **1** to view products\n" +
+      "Press **2** to view cart\n" +
+      "Press **3** to checkout",
       senderID
     );
   }
